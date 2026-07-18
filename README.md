@@ -79,6 +79,7 @@ After the GitHub repository is published, the equivalent command is:
 
 ```bash
 codex plugin marketplace add OWNER/REPOSITORY
+codex plugin add proofrank@proofrank-marketplace
 ```
 
 Then open the Plugins Directory in the ChatGPT desktop app or `/plugins` in Codex CLI, install **ProofRank**, and start a new task. Invoke the bundled skill explicitly with `$audit-site-graph` or describe the desired read-only site audit.

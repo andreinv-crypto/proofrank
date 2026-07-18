@@ -36,6 +36,7 @@ Add the repository as a plugin marketplace source:
 
 ```bash
 codex plugin marketplace add OWNER/REPOSITORY
+codex plugin add proofrank@proofrank-marketplace
 ```
 
 Install **ProofRank** from the Plugins Directory, start a new task, and invoke `$audit-site-graph`. The bundled demo remains the recommended zero-credential evaluation path.
