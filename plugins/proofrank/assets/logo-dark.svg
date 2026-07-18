@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="title desc">
+  <title id="title">ProofRank</title><desc id="desc">Evidence-first site graph intelligence</desc>
+  <defs><linearGradient id="g" x1="105" y1="80" x2="505" y2="525" gradientUnits="userSpaceOnUse"><stop stop-color="#E7FFFB"/><stop offset="1" stop-color="#56D9D2"/></linearGradient></defs>
+  <rect width="600" height="600" rx="156" fill="#050B14"/>
+  <circle cx="300" cy="300" r="207" fill="#0B1929" stroke="#56D9D2" stroke-opacity=".28" stroke-width="4"/>
+  <path d="M174 403V183h116c62 0 103 35 103 89 0 55-41 91-103 91h-51v40h-65Zm65-96h47c28 0 43-13 43-35 0-22-15-34-43-34h-47v69Z" fill="url(#g)"/>
+  <path d="m383 394 34-78 35 30 45-95 38 19-74 143-38-32-17 40-23-27Z" fill="#FFD17F"/>
+</svg>

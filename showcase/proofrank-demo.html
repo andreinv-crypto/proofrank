@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>ProofRank — Evidence-first SEO audit</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(16, 31, 51, .86);
+      --panel-strong: #10233a;
+      --line: rgba(163, 188, 217, .15);
+      --text: #eef7ff;
+      --muted: #9fb1c5;
+      --cyan: #56d9d2;
+      --cyan-soft: rgba(86, 217, 210, .12);
+      --gold: #ffc76a;
+      --red: #ff7f87;
+      --green: #73e2a7;
+      --blue: #77a8ff;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .28);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(60, 149, 192, .22), transparent 34rem),
+        radial-gradient(circle at 86% 28%, rgba(86, 217, 210, .12), transparent 30rem),
+        linear-gradient(150deg, #07111f 0%, #091827 48%, #07111f 100%);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(86, 217, 210, .55);
+      outline-offset: 2px;
+    }
+    .shell { max-width: 1440px; margin: 0 auto; padding: 20px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+      padding: 13px 16px; border: 1px solid var(--line); border-radius: 18px;
+      background: rgba(7, 17, 31, .7); backdrop-filter: blur(18px); position: sticky; top: 12px; z-index: 20;
+      box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .mark {
+      width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto;
+      border-radius: 12px; color: #06151d; font-weight: 900; letter-spacing: -.06em;
+      background: linear-gradient(135deg, var(--cyan), #b8fff3); box-shadow: 0 10px 30px rgba(86, 217, 210, .22);
+    }
+    .brand-name { font-weight: 780; letter-spacing: -.02em; }
+    .brand-sub { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .chip, .ghost-button {
+      border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.035);
+      padding: 8px 12px; white-space: nowrap;
+    }
+    .chip strong { color: var(--cyan); font-weight: 700; }
+    .ghost-button { cursor: pointer; color: var(--text); }
+    .ghost-button:hover { background: var(--cyan-soft); border-color: rgba(86,217,210,.35); }
+    .hero {
+      display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); gap: 20px;
+      padding: 64px 6px 28px; align-items: end;
+    }
+    .eyebrow { color: var(--cyan); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 12px 0 14px; max-width: 860px; font-size: clamp(38px, 6vw, 76px); line-height: .98; letter-spacing: -.055em; }
+    .hero p { max-width: 760px; margin: 0; color: var(--muted); font-size: clamp(16px, 2vw, 20px); }
+    .boundary {
+      border: 1px solid rgba(86,217,210,.26); border-radius: 18px; background: var(--cyan-soft); padding: 18px;
+    }
+    .boundary strong { display: block; color: var(--cyan); margin-bottom: 6px; }
+    .boundary span { color: #c3d6e7; }
+    .tabs { display: flex; gap: 8px; margin: 22px 0 16px; overflow-x: auto; padding-bottom: 2px; }
+    .tab {
+      border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025); color: var(--muted);
+      padding: 10px 14px; cursor: pointer; font-weight: 700;
+    }
+    .tab[aria-selected="true"] { color: #07111f; background: var(--cyan); border-color: transparent; }
+    .panel-view[hidden] { display: none; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .card {
+      border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow);
+      padding: 18px; overflow: hidden;
+    }
+    .metric-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .metric-value { margin-top: 12px; font-size: clamp(28px, 4vw, 46px); font-weight: 790; letter-spacing: -.045em; }
+    .metric-note { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .metric-value.good { color: var(--green); }
+    .grid-2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 14px; margin-top: 14px; }
+    .section-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+    .section-title h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; }
+    .section-title p { color: var(--muted); margin: 3px 0 0; font-size: 13px; }
+    .coverage-ring {
+      width: 160px; aspect-ratio: 1; border-radius: 50%; margin: 8px auto 18px; position: relative;
+      display: grid; place-items: center; background: conic-gradient(var(--cyan) var(--coverage), rgba(255,255,255,.07) 0);
+    }
+    .coverage-ring::after { content: ""; position: absolute; inset: 13px; border-radius: 50%; background: var(--panel-strong); }
+    .coverage-ring > div { position: relative; z-index: 1; text-align: center; }
+    .coverage-ring strong { display: block; font-size: 32px; letter-spacing: -.04em; }
+    .coverage-ring span { color: var(--muted); font-size: 12px; }
+    .bar-row { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr 42px; gap: 10px; align-items: center; margin: 10px 0; }
+    .bar-label { color: #ccdae8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .bar-track { height: 8px; background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+    .bar-count { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+    .filters { display: grid; grid-template-columns: minmax(180px, 1fr) 160px 160px; gap: 10px; margin-bottom: 14px; }
+    .control {
+      width: 100%; border: 1px solid var(--line); border-radius: 12px; background: #0a1929; color: var(--text); padding: 11px 12px;
+    }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    th, td { text-align: left; padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); background: #0b1a2a; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; position: sticky; top: 0; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: rgba(86,217,210,.055); }
+    td { color: #d8e4ee; font-size: 13px; }
+    .url { max-width: 340px; overflow-wrap: anywhere; color: #b7cdf0; }
+    .evidence { max-width: 460px; color: var(--muted); }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .badge-high { color: #ffd4d7; background: rgba(255,127,135,.16); }
+    .badge-medium { color: #ffe0a7; background: rgba(255,199,106,.14); }
+    .badge-low, .badge-info { color: #bed3ff; background: rgba(119,168,255,.14); }
+    .status-confirmed { color: var(--green); }
+    .status-candidate { color: var(--gold); }
+    .status-withheld { color: var(--muted); }
+    .method-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    .step-num { color: var(--cyan); font-weight: 800; font-size: 12px; letter-spacing: .12em; }
+    .method-grid h3 { margin: 10px 0 6px; }
+    .method-grid p { color: var(--muted); margin: 0; }
+    .drawer {
+      position: fixed; inset: 0; z-index: 60; display: grid; grid-template-columns: 1fr minmax(320px, 540px);
+      background: rgba(0,0,0,.48); backdrop-filter: blur(6px);
+    }
+    .drawer[hidden] { display: none; }
+    .drawer-panel { grid-column: 2; height: 100%; overflow: auto; background: #0b1929; border-left: 1px solid var(--line); padding: 26px; box-shadow: -30px 0 80px rgba(0,0,0,.3); }
+    .drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .drawer h2 { margin: 10px 0 0; overflow-wrap: anywhere; }
+    .close { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; }
+    .detail-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .detail-block strong { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 7px; }
+    .detail-block div { overflow-wrap: anywhere; }
+    .empty { color: var(--muted); padding: 28px; text-align: center; }
+    .footer { color: var(--muted); font-size: 12px; padding: 28px 4px 12px; display: flex; justify-content: space-between; gap: 20px; }
+    @media (max-width: 920px) {
+      .hero, .grid-2 { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .method-grid { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: 1fr; }
+      .hero { padding-top: 44px; }
+    }
+    @media (max-width: 560px) {
+      .shell { padding: 10px; }
+      .topbar { top: 6px; padding: 10px; }
+      .brand-sub, .top-actions .chip { display: none; }
+      .metrics { grid-template-columns: 1fr; }
+      .drawer { grid-template-columns: 1fr; }
+      .drawer-panel { grid-column: 1; }
+      .footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">PR</div>
+        <div>
+          <div class="brand-name">ProofRank</div>
+          <div class="brand-sub">Evidence-first site graph intelligence</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="chip"><strong>Read-only</strong> by default</span>
+        <button class="ghost-button" id="copySummary">Copy summary</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Site intelligence without guesswork</div>
+        <h1>Know the graph before you touch the site.</h1>
+        <p>ProofRank separates measured facts, cautious candidates, and withheld conclusions—so teams can prioritize impact without turning a partial crawl into a risky SEO decision.</p>
+      </div>
+      <div class="boundary">
+        <strong>Decision boundary</strong>
+        <span id="decisionBoundary"></span>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Dashboard sections">
+      <button class="tab" aria-selected="true" data-tab="overview">Overview</button>
+      <button class="tab" aria-selected="false" data-tab="findings">Evidence</button>
+      <button class="tab" aria-selected="false" data-tab="pages">Pages</button>
+      <button class="tab" aria-selected="false" data-tab="method">Method</button>
+    </nav>
+
+    <main>
+      <section class="panel-view" id="overview">
+        <div class="metrics" id="metrics"></div>
+        <div class="grid-2">
+          <article class="card">
+            <div class="section-title"><div><h2>Finding profile</h2><p>Measured signals grouped by type</p></div><span class="chip" id="modeChip"></span></div>
+            <div id="findingBars"></div>
+          </article>
+          <article class="card">
+            <div class="section-title"><div><h2>Coverage gate</h2><p>Completeness before graph-level claims</p></div></div>
+            <div class="coverage-ring" id="coverageRing"><div><strong id="coverageValue"></strong><span>HTML coverage</span></div></div>
+            <div id="coverageNotes"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel-view" id="findings" hidden>
+        <article class="card">
+          <div class="section-title"><div><h2>Evidence ledger</h2><p>Click any row to inspect its source evidence and safety status.</p></div><span class="chip" id="findingTotal"></span></div>
+          <div class="filters">
+            <label><span class="sr-only"></span><input class="control" id="search" placeholder="Search type, URL, or evidence"></label>
+            <select class="control" id="severity" aria-label="Filter by severity"><option value="">All severities</option><option>high</option><option>medium</option><option>low</option><option>info</option></select>
+            <select class="control" id="status" aria-label="Filter by status"><option value="">All statuses</option><option>confirmed</option><option>candidate</option><option>withheld</option></select>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Severity</th><th>Status</th><th>Finding</th><th>URL / target</th><th>Evidence</th></tr></thead><tbody id="findingRows"></tbody></table></div>
+        </article>
+      </section>
+
+      <section class="panel-view" id="pages" hidden>
+        <article class="card">
+          <div class="section-title"><div><h2>Page inventory</h2><p>Normalized pages with graph and indexability signals</p></div><span class="chip" id="pageTotal"></span></div>
+          <div class="table-wrap"><table><thead><tr><th>Depth</th><th>Status</th><th>Lane</th><th>Page</th><th>Inbound</th><th>Impressions</th><th>Canonical</th></tr></thead><tbody id="pageRows"></tbody></table></div>
+        </article>
+      </section>
+
+      <section class="panel-view" id="method" hidden>
+        <div class="method-grid">
+          <article class="card"><div class="step-num">01 / PROVENANCE</div><h3>Merge without erasing sources</h3><p>Inventory, sitemap, and cache URLs are normalized while their origin remains attached to every record.</p></article>
+          <article class="card"><div class="step-num">02 / COMPLETENESS</div><h3>Gate graph claims</h3><p>Orphans and click depth are only evaluated after the homepage, child sitemaps, and coverage threshold are verified.</p></article>
+          <article class="card"><div class="step-num">03 / SEPARATION</div><h3>Keep mechanisms apart</h3><p>Languages, articles, products, rentals, tours, and taxonomies stay in separate lanes to reduce false consolidation advice.</p></article>
+          <article class="card"><div class="step-num">04 / EVIDENCE</div><h3>Label certainty</h3><p>Every finding is marked confirmed, candidate, or withheld. Similarity alone never authorizes URL removal.</p></article>
+          <article class="card"><div class="step-num">05 / SAFETY</div><h3>No silent production writes</h3><p>The audit is local-first and read-only. Network crawling and all live mutations require separate, explicit authorization.</p></article>
+          <article class="card"><div class="step-num">06 / HANDOFF</div><h3>Make the next step small</h3><p>Outputs include machine-readable JSON/CSV, a concise report, and this local dashboard for fast human review.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><span id="footerSite"></span><span>Generated locally · No analytics · No external scripts</span></footer>
+  </div>
+
+  <aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="drawerTitle">
+    <div aria-hidden="true"></div>
+    <div class="drawer-panel">
+      <div class="drawer-head"><div><span class="badge" id="drawerBadge"></span><h2 id="drawerTitle"></h2></div><button class="close" id="closeDrawer" aria-label="Close evidence details">×</button></div>
+      <div class="detail-block"><strong>Status</strong><div id="drawerStatus"></div></div>
+      <div class="detail-block"><strong>URL / target</strong><div id="drawerUrl"></div></div>
+      <div class="detail-block"><strong>Evidence</strong><div id="drawerEvidence"></div></div>
+      <div class="detail-block"><strong>Interpretation</strong><div id="drawerInterpretation"></div></div>
+    </div>
+  </aside>
+
+  <script>
+    const payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob("eyJnZW5lcmF0ZWRfYXQiOiIyMDI2LTA3LTE4VDE4OjQzOjIyLjYxMjE3NSswMDowMCIsIm1vZGUiOiJzYXZlZF9odG1sX2NhY2hlIiwic2l0ZSI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlLyIsImNvdmVyYWdlIjp7Imtub3duX3VybHMiOjExLCJzaXRlbWFwX3VybHMiOjExLCJwYWdlX3JlY29yZHMiOjExLCJodG1sX3BhZ2VzIjoxMSwiaHRtbF9jb3ZlcmFnZSI6MS4wLCJ1bnJlc29sdmVkX3NpdGVtYXBzIjowLCJob21lcGFnZV9wYXJzZWQiOnRydWUsImNvbXBsZXRlX3RocmVzaG9sZCI6MC45NSwiZ3JhcGhfY29tcGxldGUiOnRydWV9LCJmaW5kaW5nX2NvdW50cyI6eyJzY2hlbWFfcmVsYXRpdmVfdXJsX2NhbmRpZGF0ZSI6MSwic2NoZW1hX3BhcnNlX2Vycm9yIjoxLCJsaW5rX3RvX25vbmNhbm9uaWNhbCI6MiwiZ2VuZXJpY19hbmNob3IiOjEsImxpbmtfdG9fbm9pbmRleCI6MSwiYnJva2VuX2ludGVybmFsX2xpbmsiOjEsIm9ycGhhbl9jYW5kaWRhdGUiOjMsInVucmVhY2hhYmxlX2Zyb21faG9tZV9jYW5kaWRhdGUiOjMsImRlZXBfcGFnZV9jYW5kaWRhdGUiOjEsImNhbm5pYmFsaXphdGlvbl9jYW5kaWRhdGUiOjEsImludGVybmFsX2xpbmtfb3Bwb3J0dW5pdHkiOjV9LCJmaW5kaW5ncyI6W3sidHlwZSI6InNjaGVtYV9yZWxhdGl2ZV91cmxfY2FuZGlkYXRlIiwic2V2ZXJpdHkiOiJsb3ciLCJzdGF0dXMiOiJjYW5kaWRhdGUiLCJ1cmwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvYmVhY2hlcy8iLCJldmlkZW5jZSI6ImltYWdlPS9tZWRpYS9iZWFjaGVzLmpwZyJ9LHsidHlwZSI6InNjaGVtYV9wYXJzZV9lcnJvciIsInNldmVyaXR5IjoiaGlnaCIsInN0YXR1cyI6ImNvbmZpcm1lZCIsInVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9mYW1pbHktYmVhY2hlcy8iLCJldmlkZW5jZSI6IkpTT04tTEQgYmxvY2sgMDogRXhwZWN0aW5nIHZhbHVlOiBsaW5lIDEgY29sdW1uIDEwIChjaGFyIDkpIn0seyJ0eXBlIjoibGlua190b19ub25jYW5vbmljYWwiLCJzZXZlcml0eSI6Im1lZGl1bSIsInN0YXR1cyI6ImNvbmZpcm1lZCIsInNvdXJjZSI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlLyIsInRhcmdldCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL3JlbnRhbHMvb2xkLyIsImV2aWRlbmNlIjoiY2Fub25pY2FsPWh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL3JlbnRhbHMvIn0seyJ0eXBlIjoiZ2VuZXJpY19hbmNob3IiLCJzZXZlcml0eSI6ImxvdyIsInN0YXR1cyI6ImNvbmZpcm1lZCIsInNvdXJjZSI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlLyIsInRhcmdldCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2Fib3V0LyIsImV2aWRlbmNlIjoiaGVyZSJ9LHsidHlwZSI6ImxpbmtfdG9fbm9pbmRleCIsInNldmVyaXR5IjoibWVkaXVtIiwic3RhdHVzIjoiY29uZmlybWVkIiwic291cmNlIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvIiwidGFyZ2V0IjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvYWJvdXQvIiwiZXZpZGVuY2UiOiJ0YXJnZXQgbWV0YSByb2JvdHMgY29udGFpbnMgbm9pbmRleCJ9LHsidHlwZSI6ImJyb2tlbl9pbnRlcm5hbF9saW5rIiwic2V2ZXJpdHkiOiJoaWdoIiwic3RhdHVzIjoiY29uZmlybWVkIiwic291cmNlIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2JlYWNoZXMvIiwidGFyZ2V0IjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvYnJva2VuLWRlc3RpbmF0aW9uLyIsImV2aWRlbmNlIjoiY2FjaGVkIHN0YXR1cz00MDQifSx7InR5cGUiOiJsaW5rX3RvX25vbmNhbm9uaWNhbCIsInNldmVyaXR5IjoibWVkaXVtIiwic3RhdHVzIjoiY29uZmlybWVkIiwic291cmNlIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2JlYWNoZXMvIiwidGFyZ2V0IjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvcmVudGFscy9vbGQvIiwiZXZpZGVuY2UiOiJjYW5vbmljYWw9aHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvcmVudGFscy8ifSx7InR5cGUiOiJvcnBoYW5fY2FuZGlkYXRlIiwic2V2ZXJpdHkiOiJoaWdoIiwic3RhdHVzIjoiY2FuZGlkYXRlIiwidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2hpZGRlbi1jb3Zlcy8iLCJldmlkZW5jZSI6Inplcm8gb2JzZXJ2ZWQgaW5ib3VuZCBsaW5rcyBpbiBjb21wbGV0ZSBncmFwaCJ9LHsidHlwZSI6InVucmVhY2hhYmxlX2Zyb21faG9tZV9jYW5kaWRhdGUiLCJzZXZlcml0eSI6Im1lZGl1bSIsInN0YXR1cyI6ImNhbmRpZGF0ZSIsInVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9oaWRkZW4tY292ZXMvIiwiZXZpZGVuY2UiOiJub3QgcmVhY2hhYmxlIGZyb20gaG9tZXBhZ2UgaW4gY29tcGxldGUgcGFyc2VkIGdyYXBoIn0seyJ0eXBlIjoib3JwaGFuX2NhbmRpZGF0ZSIsInNldmVyaXR5IjoiaGlnaCIsInN0YXR1cyI6ImNhbmRpZGF0ZSIsInVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL3JlbnRhbHMvIiwiZXZpZGVuY2UiOiJ6ZXJvIG9ic2VydmVkIGluYm91bmQgbGlua3MgaW4gY29tcGxldGUgZ3JhcGgifSx7InR5cGUiOiJ1bnJlYWNoYWJsZV9mcm9tX2hvbWVfY2FuZGlkYXRlIiwic2V2ZXJpdHkiOiJtZWRpdW0iLCJzdGF0dXMiOiJjYW5kaWRhdGUiLCJ1cmwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9yZW50YWxzLyIsImV2aWRlbmNlIjoibm90IHJlYWNoYWJsZSBmcm9tIGhvbWVwYWdlIGluIGNvbXBsZXRlIHBhcnNlZCBncmFwaCJ9LHsidHlwZSI6ImRlZXBfcGFnZV9jYW5kaWRhdGUiLCJzZXZlcml0eSI6Im1lZGl1bSIsInN0YXR1cyI6ImNhbmRpZGF0ZSIsInVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWEvIiwiZXZpZGVuY2UiOiJjbGljayBkZXB0aD00In0seyJ0eXBlIjoib3JwaGFuX2NhbmRpZGF0ZSIsInNldmVyaXR5IjoiaGlnaCIsInN0YXR1cyI6ImNhbmRpZGF0ZSIsInVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWIvIiwiZXZpZGVuY2UiOiJ6ZXJvIG9ic2VydmVkIGluYm91bmQgbGlua3MgaW4gY29tcGxldGUgZ3JhcGgifSx7InR5cGUiOiJ1bnJlYWNoYWJsZV9mcm9tX2hvbWVfY2FuZGlkYXRlIiwic2V2ZXJpdHkiOiJtZWRpdW0iLCJzdGF0dXMiOiJjYW5kaWRhdGUiLCJ1cmwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvd2Vla2VuZC1iLyIsImV2aWRlbmNlIjoibm90IHJlYWNoYWJsZSBmcm9tIGhvbWVwYWdlIGluIGNvbXBsZXRlIHBhcnNlZCBncmFwaCJ9LHsidHlwZSI6ImNhbm5pYmFsaXphdGlvbl9jYW5kaWRhdGUiLCJzZXZlcml0eSI6Im1lZGl1bSIsInN0YXR1cyI6ImNhbmRpZGF0ZSIsInNvdXJjZSI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9iZWFjaGVzLyIsInRhcmdldCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9mYW1pbHktYmVhY2hlcy8iLCJldmlkZW5jZSI6InRpdGxlL0gxL3F1ZXJ5IHRva2VuIEphY2NhcmQ9MC42Njc7IHNoYXJlZD1iZWFjaGVzLCBiZXN0OyBmaW5hbGl6ZWQgc2VhcmNoLXBlcmZvcm1hbmNlIGNvbmZpcm1hdGlvbiByZXF1aXJlZCJ9LHsidHlwZSI6ImludGVybmFsX2xpbmtfb3Bwb3J0dW5pdHkiLCJzZXZlcml0eSI6Im1lZGl1bSIsInN0YXR1cyI6ImNhbmRpZGF0ZSIsInRhcmdldCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9iZWFjaGVzLyIsInNvdXJjZXMiOlsiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2ZhbWlseS1iZWFjaGVzLyIsImh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9xdWlldC1iZWFjaGVzLyJdLCJldmlkZW5jZSI6ImxhdGVzdCBpbXByZXNzaW9ucz01MjA7IGNvbnRleHR1YWwgaW5ib3VuZD0wOyB0b3BpY2FsIHNvdXJjZSBjYW5kaWRhdGVzPTIifSx7InR5cGUiOiJpbnRlcm5hbF9saW5rX29wcG9ydHVuaXR5Iiwic2V2ZXJpdHkiOiJtZWRpdW0iLCJzdGF0dXMiOiJjYW5kaWRhdGUiLCJ0YXJnZXQiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvZmFtaWx5LWJlYWNoZXMvIiwic291cmNlcyI6WyJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvcXVpZXQtYmVhY2hlcy8iXSwiZXZpZGVuY2UiOiJsYXRlc3QgaW1wcmVzc2lvbnM9MzQwOyBjb250ZXh0dWFsIGluYm91bmQ9MTsgdG9waWNhbCBzb3VyY2UgY2FuZGlkYXRlcz0xIn0seyJ0eXBlIjoiaW50ZXJuYWxfbGlua19vcHBvcnR1bml0eSIsInNldmVyaXR5IjoibWVkaXVtIiwic3RhdHVzIjoiY2FuZGlkYXRlIiwidGFyZ2V0IjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL3F1aWV0LWJlYWNoZXMvIiwic291cmNlcyI6WyJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvYmVhY2hlcy8iXSwiZXZpZGVuY2UiOiJsYXRlc3QgaW1wcmVzc2lvbnM9MTcwOyBjb250ZXh0dWFsIGluYm91bmQ9MTsgdG9waWNhbCBzb3VyY2UgY2FuZGlkYXRlcz0xIn0seyJ0eXBlIjoiaW50ZXJuYWxfbGlua19vcHBvcnR1bml0eSIsInNldmVyaXR5IjoibWVkaXVtIiwic3RhdHVzIjoiY2FuZGlkYXRlIiwidGFyZ2V0IjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL3dlZWtlbmQtYS8iLCJzb3VyY2VzIjpbImh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWIvIl0sImV2aWRlbmNlIjoibGF0ZXN0IGltcHJlc3Npb25zPTgwOyBjb250ZXh0dWFsIGluYm91bmQ9MTsgdG9waWNhbCBzb3VyY2UgY2FuZGlkYXRlcz0xIn0seyJ0eXBlIjoiaW50ZXJuYWxfbGlua19vcHBvcnR1bml0eSIsInNldmVyaXR5IjoibWVkaXVtIiwic3RhdHVzIjoiY2FuZGlkYXRlIiwidGFyZ2V0IjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL3dlZWtlbmQtYi8iLCJzb3VyY2VzIjpbImh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWEvIl0sImV2aWRlbmNlIjoibGF0ZXN0IGltcHJlc3Npb25zPTcwOyBjb250ZXh0dWFsIGluYm91bmQ9MDsgdG9waWNhbCBzb3VyY2UgY2FuZGlkYXRlcz0xIn1dLCJwYWdlcyI6W3sidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvIiwicGF0aCI6Ii8iLCJ0aXRsZSI6IkNvc3RhIERlbW8gVHJhdmVsIEd1aWRlIiwiaDEiOiJQbGFuIGEgYmV0dGVyIENvc3RhIERlbW8gdHJpcCIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29udGVudCIsImNsdXN0ZXIiOiJob21lIiwiaW5fc2l0ZW1hcCI6dHJ1ZSwiaHRtbF9hdmFpbGFibGUiOnRydWUsIm5vaW5kZXgiOmZhbHNlLCJjYW5vbmljYWwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS8iLCJ3b3JkX2NvdW50IjoxNCwiaW5ib3VuZF90b3RhbCI6MCwiaW5ib3VuZF9jb250ZW50IjowLCJvdXRib3VuZF90b3RhbCI6MywiZGVwdGgiOjAsInNjaGVtYV90eXBlcyI6WyJXZWJTaXRlIl0sImxhdGVzdF9pbXByZXNzaW9ucyI6MTQwMC4wLCJsYXRlc3RfY2xpY2tzIjo0NS4wLCJzb3VyY2VfY291bnQiOjN9LHsidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvYWJvdXQvIiwicGF0aCI6Ii9hYm91dC8iLCJ0aXRsZSI6IkFib3V0IENvc3RhIERlbW8iLCJoMSI6IkFib3V0IHRoaXMgZGVtbyIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29udGVudCIsImNsdXN0ZXIiOiJhYm91dCIsImluX3NpdGVtYXAiOnRydWUsImh0bWxfYXZhaWxhYmxlIjp0cnVlLCJub2luZGV4Ijp0cnVlLCJjYW5vbmljYWwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9hYm91dC8iLCJ3b3JkX2NvdW50IjoxMCwiaW5ib3VuZF90b3RhbCI6MSwiaW5ib3VuZF9jb250ZW50IjowLCJvdXRib3VuZF90b3RhbCI6MCwiZGVwdGgiOjEsInNjaGVtYV90eXBlcyI6W10sImxhdGVzdF9pbXByZXNzaW9ucyI6MjAuMCwibGF0ZXN0X2NsaWNrcyI6MC4wLCJzb3VyY2VfY291bnQiOjN9LHsidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvYnJva2VuLWRlc3RpbmF0aW9uLyIsInBhdGgiOiIvYnJva2VuLWRlc3RpbmF0aW9uLyIsInRpdGxlIjoiRGVzdGluYXRpb24gdW5hdmFpbGFibGUiLCJoMSI6IlBhZ2Ugbm90IGZvdW5kIiwic3RhdHVzIjo0MDQsImxhbmUiOiJjb250ZW50IiwiY2x1c3RlciI6ImRlc3RpbmF0aW9ucyIsImluX3NpdGVtYXAiOnRydWUsImh0bWxfYXZhaWxhYmxlIjp0cnVlLCJub2luZGV4IjpmYWxzZSwiY2Fub25pY2FsIjoiIiwid29yZF9jb3VudCI6OSwiaW5ib3VuZF90b3RhbCI6MSwiaW5ib3VuZF9jb250ZW50IjoxLCJvdXRib3VuZF90b3RhbCI6MCwiZGVwdGgiOjIsInNjaGVtYV90eXBlcyI6W10sImxhdGVzdF9pbXByZXNzaW9ucyI6MTIuMCwibGF0ZXN0X2NsaWNrcyI6MC4wLCJzb3VyY2VfY291bnQiOjN9LHsidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2JlYWNoZXMvIiwicGF0aCI6Ii9ndWlkZXMvYmVhY2hlcy8iLCJ0aXRsZSI6IkJlc3QgQmVhY2hlcyBpbiBDb3N0YSBEZW1vIiwiaDEiOiJCZXN0IEJlYWNoZXMgaW4gQ29zdGEgRGVtbyIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29udGVudCIsImNsdXN0ZXIiOiJiZWFjaGVzIiwiaW5fc2l0ZW1hcCI6dHJ1ZSwiaHRtbF9hdmFpbGFibGUiOnRydWUsIm5vaW5kZXgiOmZhbHNlLCJjYW5vbmljYWwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvYmVhY2hlcy8iLCJ3b3JkX2NvdW50IjoyNCwiaW5ib3VuZF90b3RhbCI6MSwiaW5ib3VuZF9jb250ZW50IjowLCJvdXRib3VuZF90b3RhbCI6MywiZGVwdGgiOjEsInNjaGVtYV90eXBlcyI6WyJBcnRpY2xlIl0sImxhdGVzdF9pbXByZXNzaW9ucyI6NTIwLjAsImxhdGVzdF9jbGlja3MiOjIyLjAsInNvdXJjZV9jb3VudCI6M30seyJ1cmwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvZmFtaWx5LWJlYWNoZXMvIiwicGF0aCI6Ii9ndWlkZXMvZmFtaWx5LWJlYWNoZXMvIiwidGl0bGUiOiJCZXN0IEZhbWlseSBCZWFjaGVzIGluIENvc3RhIERlbW8iLCJoMSI6IkJlc3QgRmFtaWx5IEJlYWNoZXMgaW4gQ29zdGEgRGVtbyIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29udGVudCIsImNsdXN0ZXIiOiJiZWFjaGVzIiwiaW5fc2l0ZW1hcCI6dHJ1ZSwiaHRtbF9hdmFpbGFibGUiOnRydWUsIm5vaW5kZXgiOmZhbHNlLCJjYW5vbmljYWwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvZmFtaWx5LWJlYWNoZXMvIiwid29yZF9jb3VudCI6MTksImluYm91bmRfdG90YWwiOjEsImluYm91bmRfY29udGVudCI6MSwib3V0Ym91bmRfdG90YWwiOjEsImRlcHRoIjoyLCJzY2hlbWFfdHlwZXMiOltdLCJsYXRlc3RfaW1wcmVzc2lvbnMiOjM0MC4wLCJsYXRlc3RfY2xpY2tzIjoxMi4wLCJzb3VyY2VfY291bnQiOjN9LHsidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2hpZGRlbi1jb3Zlcy8iLCJwYXRoIjoiL2d1aWRlcy9oaWRkZW4tY292ZXMvIiwidGl0bGUiOiJIaWRkZW4gQ292ZXMgaW4gQ29zdGEgRGVtbyIsImgxIjoiSGlkZGVuIENvdmVzIGluIENvc3RhIERlbW8iLCJzdGF0dXMiOjIwMCwibGFuZSI6ImNvbnRlbnQiLCJjbHVzdGVyIjoiYmVhY2hlcyIsImluX3NpdGVtYXAiOnRydWUsImh0bWxfYXZhaWxhYmxlIjp0cnVlLCJub2luZGV4IjpmYWxzZSwiY2Fub25pY2FsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvZ3VpZGVzL2hpZGRlbi1jb3Zlcy8iLCJ3b3JkX2NvdW50IjoxNCwiaW5ib3VuZF90b3RhbCI6MCwiaW5ib3VuZF9jb250ZW50IjowLCJvdXRib3VuZF90b3RhbCI6MCwiZGVwdGgiOiIiLCJzY2hlbWFfdHlwZXMiOltdLCJsYXRlc3RfaW1wcmVzc2lvbnMiOjk1LjAsImxhdGVzdF9jbGlja3MiOjEuMCwic291cmNlX2NvdW50IjozfSx7InVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy9xdWlldC1iZWFjaGVzLyIsInBhdGgiOiIvZ3VpZGVzL3F1aWV0LWJlYWNoZXMvIiwidGl0bGUiOiJRdWlldCBCZWFjaGVzIGluIENvc3RhIERlbW8iLCJoMSI6IlF1aWV0IEJlYWNoZXMgaW4gQ29zdGEgRGVtbyIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29udGVudCIsImNsdXN0ZXIiOiJiZWFjaGVzIiwiaW5fc2l0ZW1hcCI6dHJ1ZSwiaHRtbF9hdmFpbGFibGUiOnRydWUsIm5vaW5kZXgiOmZhbHNlLCJjYW5vbmljYWwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvcXVpZXQtYmVhY2hlcy8iLCJ3b3JkX2NvdW50IjoxOCwiaW5ib3VuZF90b3RhbCI6MSwiaW5ib3VuZF9jb250ZW50IjoxLCJvdXRib3VuZF90b3RhbCI6MSwiZGVwdGgiOjMsInNjaGVtYV90eXBlcyI6W10sImxhdGVzdF9pbXByZXNzaW9ucyI6MTcwLjAsImxhdGVzdF9jbGlja3MiOjQuMCwic291cmNlX2NvdW50IjozfSx7InVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWEvIiwicGF0aCI6Ii9ndWlkZXMvd2Vla2VuZC1hLyIsInRpdGxlIjoiQ29zdGEgRGVtbyBXZWVrZW5kIFBsYW4iLCJoMSI6IkNvc3RhIERlbW8gV2Vla2VuZCBQbGFuIiwic3RhdHVzIjoyMDAsImxhbmUiOiJjb250ZW50IiwiY2x1c3RlciI6IndlZWtlbmQiLCJpbl9zaXRlbWFwIjp0cnVlLCJodG1sX2F2YWlsYWJsZSI6dHJ1ZSwibm9pbmRleCI6ZmFsc2UsImNhbm9uaWNhbCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWEvIiwid29yZF9jb3VudCI6MTYsImluYm91bmRfdG90YWwiOjEsImluYm91bmRfY29udGVudCI6MSwib3V0Ym91bmRfdG90YWwiOjAsImRlcHRoIjo0LCJzY2hlbWFfdHlwZXMiOltdLCJsYXRlc3RfaW1wcmVzc2lvbnMiOjgwLjAsImxhdGVzdF9jbGlja3MiOjIuMCwic291cmNlX2NvdW50IjozfSx7InVybCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL2d1aWRlcy93ZWVrZW5kLWIvIiwicGF0aCI6Ii9ndWlkZXMvd2Vla2VuZC1iLyIsInRpdGxlIjoiQ29zdGEgRGVtbyBXZWVrZW5kIEl0aW5lcmFyeSIsImgxIjoiQ29zdGEgRGVtbyBXZWVrZW5kIEl0aW5lcmFyeSIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29udGVudCIsImNsdXN0ZXIiOiJ3ZWVrZW5kIiwiaW5fc2l0ZW1hcCI6dHJ1ZSwiaHRtbF9hdmFpbGFibGUiOnRydWUsIm5vaW5kZXgiOmZhbHNlLCJjYW5vbmljYWwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9ndWlkZXMvd2Vla2VuZC1iLyIsIndvcmRfY291bnQiOjE2LCJpbmJvdW5kX3RvdGFsIjowLCJpbmJvdW5kX2NvbnRlbnQiOjAsIm91dGJvdW5kX3RvdGFsIjowLCJkZXB0aCI6IiIsInNjaGVtYV90eXBlcyI6W10sImxhdGVzdF9pbXByZXNzaW9ucyI6NzAuMCwibGF0ZXN0X2NsaWNrcyI6MS4wLCJzb3VyY2VfY291bnQiOjN9LHsidXJsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvcmVudGFscy8iLCJwYXRoIjoiL3JlbnRhbHMvIiwidGl0bGUiOiJDb3N0YSBEZW1vIFJlbnRhbHMiLCJoMSI6IlJlbnRhbHMgaW4gQ29zdGEgRGVtbyIsInN0YXR1cyI6MjAwLCJsYW5lIjoiY29tbWVyY2UiLCJjbHVzdGVyIjoicmVudGFscyIsImluX3NpdGVtYXAiOnRydWUsImh0bWxfYXZhaWxhYmxlIjp0cnVlLCJub2luZGV4IjpmYWxzZSwiY2Fub25pY2FsIjoiaHR0cHM6Ly9jb3N0YS1kZW1vLmV4YW1wbGUvcmVudGFscy8iLCJ3b3JkX2NvdW50IjoxMiwiaW5ib3VuZF90b3RhbCI6MCwiaW5ib3VuZF9jb250ZW50IjowLCJvdXRib3VuZF90b3RhbCI6MCwiZGVwdGgiOiIiLCJzY2hlbWFfdHlwZXMiOltdLCJsYXRlc3RfaW1wcmVzc2lvbnMiOjQxMC4wLCJsYXRlc3RfY2xpY2tzIjo4LjAsInNvdXJjZV9jb3VudCI6M30seyJ1cmwiOiJodHRwczovL2Nvc3RhLWRlbW8uZXhhbXBsZS9yZW50YWxzL29sZC8iLCJwYXRoIjoiL3JlbnRhbHMvb2xkLyIsInRpdGxlIjoiT2xkIFJlbnRhbCBMYW5kaW5nIiwiaDEiOiJPbGQgcmVudGFsIGxhbmRpbmciLCJzdGF0dXMiOjIwMCwibGFuZSI6ImNvbW1lcmNlIiwiY2x1c3RlciI6InJlbnRhbHMiLCJpbl9zaXRlbWFwIjp0cnVlLCJodG1sX2F2YWlsYWJsZSI6dHJ1ZSwibm9pbmRleCI6ZmFsc2UsImNhbm9uaWNhbCI6Imh0dHBzOi8vY29zdGEtZGVtby5leGFtcGxlL3JlbnRhbHMvIiwid29yZF9jb3VudCI6MTQsImluYm91bmRfdG90YWwiOjIsImluYm91bmRfY29udGVudCI6MSwib3V0Ym91bmRfdG90YWwiOjAsImRlcHRoIjoxLCJzY2hlbWFfdHlwZXMiOltdLCJsYXRlc3RfaW1wcmVzc2lvbnMiOjYwLjAsImxhdGVzdF9jbGlja3MiOjAuMCwic291cmNlX2NvdW50IjozfV0sImRlY2lzaW9uX2JvdW5kYXJ5IjoiTm8gbGl2ZSBjaGFuZ2VzIGFyZSBhdXRob3JpemVkIGJ5IHRoaXMgYXVkaXQuIENvbmZpcm0gdGhlIENNUyBtZWNoYW5pc20gYW5kIGFueSByZXF1aXJlZCBmaW5hbGl6ZWQgc2VhcmNoLXBlcmZvcm1hbmNlIGV2aWRlbmNlIGJlZm9yZSBVUkwgYWN0aW9ucy4ifQ=="), c => c.charCodeAt(0))));
+    const $ = (selector) => document.querySelector(selector);
+    const escText = (value) => value == null || value === "" ? "—" : String(value);
+    const pct = (value) => `${Math.round(Number(value || 0) * 100)}%`;
+    const number = (value) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Number(value || 0));
+    const findingUrl = (f) => f.source && f.target ? `${f.source} ↔ ${f.target}` : (f.url || f.target || f.source || (f.urls || []).slice(0, 2).join(", ") || "—");
+    const interpretation = {
+      confirmed: "Directly observed in the applicable input. A live change still requires a separate decision and rollback plan.",
+      candidate: "A measured signal that requires another evidence source or mechanism review before action.",
+      withheld: "Current inputs cannot support this conclusion. Collect the missing evidence instead of guessing."
+    };
+
+    document.getElementById("decisionBoundary").textContent = payload.decision_boundary;
+    document.getElementById("modeChip").textContent = payload.mode.replaceAll("_", " ");
+    document.getElementById("footerSite").textContent = `${payload.site} · ${payload.generated_at}`;
+
+    const c = payload.coverage;
+    const totalFindings = payload.findings.length;
+    const confirmed = payload.findings.filter(f => f.status === "confirmed").length;
+    const high = payload.findings.filter(f => f.severity === "high").length;
+    const metricData = [
+      ["Known URLs", number(c.known_urls), `${number(c.sitemap_urls)} sitemap entries`, ""],
+      ["HTML coverage", pct(c.html_coverage), `${number(c.html_pages)} parsed pages`, c.graph_complete ? "good" : ""],
+      ["Evidence items", number(totalFindings), `${number(confirmed)} confirmed`, ""],
+      ["High priority", number(high), c.graph_complete ? "Graph gate passed" : "Graph gate withheld", c.graph_complete ? "good" : ""]
+    ];
+    metricData.forEach(([label, value, note, cls]) => {
+      const card = document.createElement("article"); card.className = "card";
+      const labelEl = document.createElement("div"); labelEl.className = "metric-label"; labelEl.textContent = label;
+      const valueEl = document.createElement("div"); valueEl.className = `metric-value ${cls}`; valueEl.textContent = value;
+      const noteEl = document.createElement("div"); noteEl.className = "metric-note"; noteEl.textContent = note;
+      card.append(labelEl, valueEl, noteEl); $("#metrics").append(card);
+    });
+
+    const findingCounts = Object.entries(payload.finding_counts).sort((a,b) => b[1] - a[1]).slice(0, 9);
+    const maxCount = Math.max(1, ...findingCounts.map(([,count]) => count));
+    findingCounts.forEach(([label, count]) => {
+      const row = document.createElement("div"); row.className = "bar-row";
+      const name = document.createElement("div"); name.className = "bar-label"; name.textContent = label.replaceAll("_", " "); name.title = label;
+      const track = document.createElement("div"); track.className = "bar-track";
+      const fill = document.createElement("div"); fill.className = "bar-fill"; fill.style.width = `${Math.max(3, count / maxCount * 100)}%`; track.append(fill);
+      const value = document.createElement("div"); value.className = "bar-count"; value.textContent = number(count);
+      row.append(name, track, value); $("#findingBars").append(row);
+    });
+
+    $("#coverageRing").style.setProperty("--coverage", pct(c.html_coverage));
+    $("#coverageValue").textContent = pct(c.html_coverage);
+    const notes = [
+      ["Homepage parsed", c.homepage_parsed ? "Yes" : "No"],
+      ["Unresolved sitemaps", number(c.unresolved_sitemaps)],
+      ["Completeness threshold", pct(c.complete_threshold)],
+      ["Graph-level claims", c.graph_complete ? "Enabled" : "Withheld"]
+    ];
+    notes.forEach(([label, value]) => {
+      const row = document.createElement("div"); row.className = "bar-row";
+      const left = document.createElement("div"); left.className = "bar-label"; left.textContent = label;
+      const spacer = document.createElement("div");
+      const right = document.createElement("div"); right.className = "bar-count"; right.textContent = value;
+      row.append(left, spacer, right); $("#coverageNotes").append(row);
+    });
+
+    const rows = $("#findingRows");
+    function showDrawer(finding) {
+      $("#drawerBadge").className = `badge badge-${finding.severity || "info"}`;
+      $("#drawerBadge").textContent = escText(finding.severity);
+      $("#drawerTitle").textContent = escText(finding.type).replaceAll("_", " ");
+      $("#drawerStatus").textContent = escText(finding.status);
+      $("#drawerStatus").className = `status-${finding.status}`;
+      $("#drawerUrl").textContent = findingUrl(finding);
+      $("#drawerEvidence").textContent = escText(finding.evidence);
+      $("#drawerInterpretation").textContent = interpretation[finding.status] || interpretation.candidate;
+      $("#drawer").hidden = false; $("#closeDrawer").focus();
+    }
+    function renderFindings() {
+      const query = $("#search").value.trim().toLowerCase();
+      const severity = $("#severity").value;
+      const status = $("#status").value;
+      const filtered = payload.findings.filter(f => {
+        const haystack = `${f.type} ${findingUrl(f)} ${f.evidence || ""}`.toLowerCase();
+        return (!query || haystack.includes(query)) && (!severity || f.severity === severity) && (!status || f.status === status);
+      });
+      rows.replaceChildren();
+      filtered.forEach((f) => {
+        const tr = document.createElement("tr"); tr.tabIndex = 0; tr.setAttribute("role", "button");
+        const sev = document.createElement("td"); const badge = document.createElement("span"); badge.className = `badge badge-${f.severity || "info"}`; badge.textContent = escText(f.severity); sev.append(badge);
+        const stat = document.createElement("td"); stat.className = `status-${f.status}`; stat.textContent = escText(f.status);
+        const type = document.createElement("td"); type.textContent = escText(f.type).replaceAll("_", " ");
+        const url = document.createElement("td"); url.className = "url"; url.textContent = findingUrl(f);
+        const evidence = document.createElement("td"); evidence.className = "evidence"; evidence.textContent = escText(f.evidence);
+        tr.append(sev, stat, type, url, evidence);
+        tr.addEventListener("click", () => showDrawer(f)); tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showDrawer(f); }});
+        rows.append(tr);
+      });
+      $("#findingTotal").textContent = `${number(filtered.length)} of ${number(payload.findings.length)}`;
+      if (!filtered.length) { const tr = document.createElement("tr"); const td = document.createElement("td"); td.colSpan = 5; td.className = "empty"; td.textContent = "No findings match these filters."; tr.append(td); rows.append(tr); }
+    }
+    ["#search", "#severity", "#status"].forEach(id => $(id).addEventListener("input", renderFindings));
+    renderFindings();
+
+    const pageRows = $("#pageRows");
+    payload.pages.slice().sort((a,b) => (Number(b.latest_impressions || 0) - Number(a.latest_impressions || 0)) || String(a.url).localeCompare(String(b.url))).slice(0, 250).forEach(p => {
+      const tr = document.createElement("tr");
+      [p.depth, p.status, p.lane, p.url, p.inbound_total, number(p.latest_impressions), p.canonical].forEach((value, index) => {
+        const td = document.createElement("td"); td.textContent = escText(value); if (index === 3 || index === 6) td.className = "url"; tr.append(td);
+      });
+      pageRows.append(tr);
+    });
+    $("#pageTotal").textContent = `${number(payload.pages.length)} pages`;
+
+    $(".tabs").addEventListener("click", event => {
+      const button = event.target.closest("[data-tab]"); if (!button) return;
+      document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", String(tab === button)));
+      document.querySelectorAll(".panel-view").forEach(panel => panel.hidden = panel.id !== button.dataset.tab);
+    });
+    $("#closeDrawer").addEventListener("click", () => $("#drawer").hidden = true);
+    $("#drawer").addEventListener("click", e => { if (e.target === $("#drawer")) $("#drawer").hidden = true; });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") $("#drawer").hidden = true; });
+    $("#copySummary").addEventListener("click", async () => {
+      const summary = `ProofRank audit for ${payload.site}: ${c.known_urls} URLs, ${pct(c.html_coverage)} HTML coverage, ${totalFindings} evidence items, graph ${c.graph_complete ? "complete" : "withheld"}.`;
+      try { await navigator.clipboard.writeText(summary); $("#copySummary").textContent = "Copied"; setTimeout(() => $("#copySummary").textContent = "Copy summary", 1400); }
+      catch { $("#copySummary").textContent = "Copy unavailable"; }
+    });
+  </script>
+</body>
+</html>

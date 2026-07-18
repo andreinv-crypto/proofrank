@@ -1,0 +1,29 @@
+{
+  "name": "proofrank",
+  "version": "0.1.0",
+  "description": "Evidence-first, read-only site graph audits for Codex.",
+  "author": {
+    "name": "Andrei Zakharov"
+  },
+  "license": "MIT",
+  "keywords": ["seo", "site-audit", "site-graph", "codex", "read-only"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ProofRank",
+    "shortDescription": "Evidence-first site graph intelligence.",
+    "longDescription": "Audit multilingual site graphs from saved inventories, sitemaps, and HTML caches. ProofRank separates confirmed evidence, cautious candidates, and withheld conclusions before any live SEO action.",
+    "developerName": "Andrei Zakharov",
+    "category": "Productivity",
+    "capabilities": ["Read-only audit", "Local reports", "Interactive dashboard"],
+    "defaultPrompt": [
+      "Audit this site's saved graph without changing anything.",
+      "Find orphan and internal-link candidates from this cache.",
+      "Explain which SEO conclusions the current coverage supports."
+    ],
+    "brandColor": "#56D9D2",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "logoDark": "./assets/logo-dark.svg",
+    "screenshots": ["./assets/screenshot-dashboard.png"]
+  }
+}

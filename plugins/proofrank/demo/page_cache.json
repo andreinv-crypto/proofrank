@@ -1,0 +1,61 @@
+{
+  "site": "https://costa-demo.example/",
+  "generated_at": "2026-07-18T12:00:00Z",
+  "pages": {
+    "https://costa-demo.example/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Costa Demo Travel Guide</title><link rel=\"canonical\" href=\"https://costa-demo.example/\"><script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"name\":\"Costa Demo\"}</script></head><body><header><nav><a href=\"/guides/beaches/\">Beaches</a><a href=\"/rentals/old/\">Rentals</a><a href=\"/about/\">here</a></nav></header><main><h1>Plan a better Costa Demo trip</h1><p>Independent travel guidance for beaches, rentals, food, and practical local planning.</p></main></body></html>"
+    },
+    "https://costa-demo.example/guides/beaches/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/guides/beaches/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Best Beaches in Costa Demo</title><link rel=\"canonical\" href=\"https://costa-demo.example/guides/beaches/\"><script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@type\":\"Article\",\"headline\":\"Best Beaches in Costa Demo\",\"image\":\"/media/beaches.jpg\"}</script></head><body><main><h1>Best Beaches in Costa Demo</h1><p>Compare accessible promenades, quiet water, family facilities, and seasonal services before choosing a beach.</p><a href=\"/guides/family-beaches/\">Family beach guide</a><a href=\"/broken-destination/\">Old destination</a><a href=\"/rentals/old/\">Stay near the beach</a></main></body></html>"
+    },
+    "https://costa-demo.example/guides/family-beaches/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/guides/family-beaches/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Best Family Beaches in Costa Demo</title><link rel=\"canonical\" href=\"https://costa-demo.example/guides/family-beaches/\"><script type=\"application/ld+json\">{\"@type\":</script></head><body><main><h1>Best Family Beaches in Costa Demo</h1><p>Find shallow water, nearby shade, toilets, parking, and step-free access for a calmer family day.</p><a href=\"/guides/quiet-beaches/\">Quieter alternatives</a></main></body></html>"
+    },
+    "https://costa-demo.example/guides/quiet-beaches/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/guides/quiet-beaches/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Quiet Beaches in Costa Demo</title><link rel=\"canonical\" href=\"https://costa-demo.example/guides/quiet-beaches/\"></head><body><main><h1>Quiet Beaches in Costa Demo</h1><p>Choose smaller beaches and off-peak hours when noise, crowds, and long walking distances matter.</p><a href=\"/guides/weekend-a/\">Build a weekend plan</a></main></body></html>"
+    },
+    "https://costa-demo.example/guides/hidden-coves/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/guides/hidden-coves/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Hidden Coves in Costa Demo</title><link rel=\"canonical\" href=\"https://costa-demo.example/guides/hidden-coves/\"></head><body><main><h1>Hidden Coves in Costa Demo</h1><p>A field guide to small coves, difficult access, water conditions, and low-impact visits.</p></main></body></html>"
+    },
+    "https://costa-demo.example/rentals/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/rentals/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Costa Demo Rentals</title><link rel=\"canonical\" href=\"https://costa-demo.example/rentals/\"></head><body><main><h1>Rentals in Costa Demo</h1><p>Browse sample apartments by neighborhood, accessibility, distance to the sea, and monthly budget.</p></main></body></html>"
+    },
+    "https://costa-demo.example/rentals/old/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/rentals/old/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Old Rental Landing</title><link rel=\"canonical\" href=\"https://costa-demo.example/rentals/\"></head><body><main><h1>Old rental landing</h1><p>This legacy page still receives links but declares the current rentals hub as canonical.</p></main></body></html>"
+    },
+    "https://costa-demo.example/about/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/about/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>About Costa Demo</title><meta name=\"robots\" content=\"noindex,follow\"><link rel=\"canonical\" href=\"https://costa-demo.example/about/\"></head><body><main><h1>About this demo</h1><p>This synthetic site exists only to demonstrate evidence-first graph auditing.</p></main></body></html>"
+    },
+    "https://costa-demo.example/broken-destination/": {
+      "status": 404,
+      "final_url": "https://costa-demo.example/broken-destination/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Destination unavailable</title></head><body><main><h1>Page not found</h1><p>This fixture intentionally represents a broken internal destination.</p></main></body></html>"
+    },
+    "https://costa-demo.example/guides/weekend-a/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/guides/weekend-a/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Costa Demo Weekend Plan</title><link rel=\"canonical\" href=\"https://costa-demo.example/guides/weekend-a/\"></head><body><main><h1>Costa Demo Weekend Plan</h1><p>Spend Saturday by the sea, walk the old town at sunset, and reserve Sunday for a quiet local market.</p></main></body></html>"
+    },
+    "https://costa-demo.example/guides/weekend-b/": {
+      "status": 200,
+      "final_url": "https://costa-demo.example/guides/weekend-b/",
+      "html": "<!doctype html><html lang=\"en\"><head><title>Costa Demo Weekend Itinerary</title><link rel=\"canonical\" href=\"https://costa-demo.example/guides/weekend-b/\"></head><body><main><h1>Costa Demo Weekend Itinerary</h1><p>Spend Saturday by the sea, walk the old town at sunset, and reserve Sunday for a quiet local market.</p></main></body></html>"
+    }
+  }
+}

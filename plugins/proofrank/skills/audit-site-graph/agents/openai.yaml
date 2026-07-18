@@ -1,0 +1,4 @@
+interface:
+  display_name: "ProofRank Site Graph Audit"
+  short_description: "Audit site graphs with evidence-first safety"
+  default_prompt: "Use $audit-site-graph to run a read-only evidence-first audit on this site's saved data."

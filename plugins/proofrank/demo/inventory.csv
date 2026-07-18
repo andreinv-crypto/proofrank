@@ -1,0 +1,12 @@
+url,title,mechanismLane,strategicCluster,latestClicks,latestImpressions,topQueries
+https://costa-demo.example/,Costa Demo Travel Guide,content,home,45,1400,costa demo travel guide
+https://costa-demo.example/guides/beaches/,Best Beaches in Costa Demo,content,beaches,22,520,best beaches costa demo
+https://costa-demo.example/guides/family-beaches/,Best Family Beaches in Costa Demo,content,beaches,12,340,best family beaches costa demo
+https://costa-demo.example/guides/quiet-beaches/,Quiet Beaches in Costa Demo,content,beaches,4,170,quiet beaches costa demo
+https://costa-demo.example/guides/hidden-coves/,Hidden Coves in Costa Demo,content,beaches,1,95,hidden coves costa demo
+https://costa-demo.example/rentals/,Costa Demo Rentals,commerce,rentals,8,410,costa demo rentals
+https://costa-demo.example/rentals/old/,Old Rental Landing,commerce,rentals,0,60,costa demo apartment rental
+https://costa-demo.example/about/,About Costa Demo,content,about,0,20,about costa demo
+https://costa-demo.example/broken-destination/,Unavailable destination,content,destinations,0,12,costa demo unavailable destination
+https://costa-demo.example/guides/weekend-a/,Costa Demo Weekend Plan,content,weekend,2,80,costa demo weekend plan
+https://costa-demo.example/guides/weekend-b/,Costa Demo Weekend Itinerary,content,weekend,1,70,costa demo weekend itinerary
