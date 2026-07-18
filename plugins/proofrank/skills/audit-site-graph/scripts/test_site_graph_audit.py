@@ -14,6 +14,11 @@ SPEC = importlib.util.spec_from_file_location("site_graph_audit", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
+RUN_DEMO_SCRIPT = Path(__file__).with_name("run_demo.py")
+RUN_DEMO_SPEC = importlib.util.spec_from_file_location("run_demo", RUN_DEMO_SCRIPT)
+RUN_DEMO = importlib.util.module_from_spec(RUN_DEMO_SPEC)
+RUN_DEMO_SPEC.loader.exec_module(RUN_DEMO)
+
 
 class SiteGraphAuditTests(unittest.TestCase):
     def test_unicode_url_and_tokens(self):
@@ -108,6 +113,41 @@ class SiteGraphAuditTests(unittest.TestCase):
             audit = json.loads((output / "audit.json").read_text(encoding="utf-8"))
             self.assertFalse(audit["coverage"]["graph_complete"])
             self.assertEqual(audit["coverage"]["sitemap_urls"], 2)
+            self.assertNotIn("orphan_candidate", audit["finding_counts"])
+            self.assertNotIn("unreachable_from_home_candidate", audit["finding_counts"])
+            self.assertNotIn("internal_link_opportunity", audit["finding_counts"])
+            withheld = [item for item in audit["findings"] if item["type"] == "graph_claims_withheld"]
+            self.assertEqual(len(withheld), 1)
+            self.assertEqual(withheld[0]["status"], "withheld")
+            self.assertIn("Whole-site orphan", withheld[0]["evidence"])
+
+    def test_bundled_incomplete_demo_uses_same_fixture_and_withholds_graph_claims(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "incomplete"
+            code = RUN_DEMO.main([
+                "--scenario", "incomplete",
+                "--output-dir", str(output),
+            ])
+            self.assertEqual(code, 0)
+
+            audit = json.loads((output / "audit.json").read_text(encoding="utf-8"))
+            self.assertEqual(audit["coverage"]["known_urls"], 11)
+            self.assertEqual(audit["coverage"]["html_pages"], 7)
+            self.assertAlmostEqual(audit["coverage"]["html_coverage"], 7 / 11)
+            self.assertFalse(audit["coverage"]["graph_complete"])
+            self.assertFalse(audit["inputs"]["network_enabled"])
+            self.assertFalse(audit["inputs"]["crawl_enabled"])
+            self.assertTrue((output / "dashboard.html").is_file())
+
+            partial_cache = json.loads((output / "page_cache.incomplete.json").read_text(encoding="utf-8"))
+            self.assertEqual(partial_cache["scenario"], "incomplete-coverage")
+            self.assertEqual(len(partial_cache["pages"]), 7)
+            self.assertIn("https://costa-demo.example/", partial_cache["pages"])
+
+            withheld = [item for item in audit["findings"] if item["type"] == "graph_claims_withheld"]
+            self.assertEqual(len(withheld), 1)
+            self.assertEqual(withheld[0]["status"], "withheld")
+            self.assertIn("63.64% (7/11)", withheld[0]["evidence"])
             self.assertNotIn("orphan_candidate", audit["finding_counts"])
             self.assertNotIn("unreachable_from_home_candidate", audit["finding_counts"])
             self.assertNotIn("internal_link_opportunity", audit["finding_counts"])

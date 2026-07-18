@@ -4,7 +4,7 @@
 
 - **Project name:** ProofRank
 - **Track:** Work and productivity
-- **Tagline:** Evidence-first site graph intelligence for teams that need safer SEO decisions.
+- **Tagline:** When evidence is incomplete, ProofRank refuses to guess.
 - **Repository URL:** `[ADD AFTER GITHUB PUBLICATION]`
 - **Public YouTube demo:** `[ADD AFTER VIDEO UPLOAD]`
 - **Codex /feedback Session ID:** `[ADD FROM THE CORE BUILD TASK]`
@@ -13,13 +13,17 @@
 
 ### Inspiration
 
-Large websites accumulate broken internal links, orphan pages, duplicate content, schema defects, and conflicting search intent. The dangerous part is not finding possible problems; it is turning incomplete crawl data into confident live-site actions. SEO teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
+I’m Andrei Zakharov. I’m fully paralysed, so every unnecessary computer action has a physical cost. Years of SEO work taught me that bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
+
+ProofRank grew from that constraint, but its value is universal: SEO teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
 
 ### What it does
 
 ProofRank is a read-only Codex plugin that converts saved URL inventories, sitemaps, and HTML caches into a reproducible site graph audit. It detects coverage gaps, click depth, orphan and unreachable-page candidates, broken/noindex/noncanonical targets, schema problems, duplicate content, cautious topic conflicts, and contextual internal-link opportunities.
 
-Every finding carries an evidence status. Graph-level conclusions are withheld until coverage clears an explicit completeness gate. A dependency-free interactive dashboard lets a reviewer filter the evidence, inspect individual findings, and understand the decision boundary before anyone changes a live site.
+Every finding carries an evidence status: confirmed, candidate, or withheld. Graph-level conclusions are withheld until coverage clears an explicit completeness gate. A dependency-free interactive dashboard lets a reviewer filter the evidence, inspect individual findings, and understand the decision boundary before anyone changes a live site.
+
+The bundled comparison makes the behaviour visible: the same 11-URL synthetic fixture produces a 63.64% incomplete result that withholds whole-site graph claims, then a 100% result that enables supported findings.
 
 ### How we built it
 
@@ -35,6 +39,8 @@ The public demo uses fully synthetic data. The design came from a private, domai
 
 Codex with GPT-5.6 helped turn the original domain-specific workflow into a portable product: mapping the reusable architecture, refactoring the engine, authoring the Codex Skill and plugin manifests, generating a synthetic edge-case fixture, building the dashboard, writing tests, running official plugin/skill validators, scanning for secrets, and executing desktop/mobile browser QA.
 
+For the final Build Week extension, GPT-5.6 with Ultra reasoning implemented and tested the reproducible incomplete-coverage scenario. It derives a deterministic 7-of-11 cache from the same public fixture, emits an explicit `graph_claims_withheld` evidence item, and verifies that orphan, unreachable, and internal-link-opportunity claims are not promoted when the gate fails.
+
 The model does not manufacture graph facts. Deterministic code calculates coverage and findings; Codex supplies the workflow, safety policy, interpretation, and product experience around that evidence.
 
 ### Challenges
@@ -49,6 +55,7 @@ The model does not manufacture graph facts. Deterministic code calculates covera
 - A working installable Codex plugin with a valid manifest and valid Skill.
 - A deterministic demo that produces 20 evidence items across 11 synthetic pages.
 - Explicit confirmed/candidate/withheld evidence states and a 95% graph-completeness gate.
+- A one-command before/after proof: 63.64% coverage with graph claims withheld, then 100% coverage with the gate enabled.
 - A dependency-free interactive dashboard with filters and evidence details.
 - Automated unit, demo, boundary, secret-scan, and browser-interaction checks.
 
@@ -66,12 +73,18 @@ Codex, GPT-5.6, Codex Skills, Codex plugins, Python, HTML, CSS, JavaScript, JSON
 
 ## Testing instructions
 
-The repository contains a pre-generated interactive demo at `showcase/proofrank-demo.html`; download and open it in any modern browser. No rebuilding, login, API key, or network request is required.
+The repository contains two pre-generated interactive demos. Open `showcase/proofrank-incomplete-demo.html` first, then `showcase/proofrank-demo.html`. No rebuilding, login, API key, or network request is required.
 
 To regenerate the same result with Python 3.10+:
 
 ```bash
 python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py
+```
+
+To regenerate both evidence-gate states:
+
+```bash
+python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py --scenario both
 ```
 
 To run the portable verification suite:
@@ -80,4 +93,4 @@ To run the portable verification suite:
 python scripts/verify.py
 ```
 
-Expected demo headline values: 11 known URLs, 100% HTML coverage, 20 evidence items, and 5 high-priority items.
+Expected complete-demo headline values: 11 known URLs, 100% HTML coverage, 20 evidence items, and graph claims enabled. Expected incomplete-demo values: 11 known URLs, 7 parsed pages, 63.64% HTML coverage, and graph claims withheld.

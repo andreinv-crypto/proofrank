@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "proofrank"
 SKILL = PLUGIN / "skills" / "audit-site-graph"
+MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
 
 
 SECRET_PATTERNS = {
@@ -30,7 +31,7 @@ def run(command: list[str]) -> None:
 
 def scan_secrets() -> list[str]:
     findings = []
-    excluded = {".git", "demo-output", "__pycache__"}
+    excluded = {".git", ".build", "demo-output", "demo-output-incomplete", "node_modules", "__pycache__"}
     for path in ROOT.rglob("*"):
         if not path.is_file() or any(part in excluded for part in path.parts):
             continue
@@ -59,21 +60,67 @@ def validate_manifest() -> None:
         assert target.is_file(), f"Missing manifest asset: {target}"
 
 
+def validate_marketplace() -> None:
+    marketplace = json.loads(MARKETPLACE.read_text(encoding="utf-8"))
+    entries = [entry for entry in marketplace.get("plugins", []) if entry.get("name") == "proofrank"]
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry["source"] == {"source": "local", "path": "./plugins/proofrank"}
+    assert entry["policy"]["installation"] == "AVAILABLE"
+    assert entry["policy"]["authentication"] in {"ON_INSTALL", "ON_USE"}
+    assert entry["category"] == "Productivity"
+
+
+def validate_public_dashboard(path: Path) -> None:
+    dashboard = path.read_text(encoding="utf-8")
+    assert "ProofRank" in dashboard
+    assert "C:\\Users\\" not in dashboard
+    assert not re.search(r"<script[^>]+src=", dashboard, re.IGNORECASE)
+    assert not re.search(r"https?://[^\"']+\.(?:js|css)", dashboard, re.IGNORECASE)
+
+
 def main() -> int:
     validate_manifest()
+    validate_marketplace()
     run([sys.executable, str(SKILL / "scripts" / "test_site_graph_audit.py")])
     with tempfile.TemporaryDirectory(prefix="proofrank-verify-") as temp:
         output = Path(temp) / "demo-output"
-        run([sys.executable, str(SKILL / "scripts" / "run_demo.py"), "--output-dir", str(output)])
-        dashboard = (output / "dashboard.html").read_text(encoding="utf-8")
-        assert "ProofRank" in dashboard
-        assert "C:\\Users\\" not in dashboard
-        assert not re.search(r"<script[^>]+src=", dashboard, re.IGNORECASE)
-        assert not re.search(r"https?://[^\"']+\.(?:js|css)", dashboard, re.IGNORECASE)
+        run([
+            sys.executable,
+            str(SKILL / "scripts" / "run_demo.py"),
+            "--scenario", "both",
+            "--output-dir", str(output),
+        ])
+        complete = json.loads((output / "complete" / "audit.json").read_text(encoding="utf-8"))
+        incomplete = json.loads((output / "incomplete" / "audit.json").read_text(encoding="utf-8"))
+        assert complete["coverage"]["graph_complete"] is True
+        assert complete["coverage"]["html_coverage"] == 1.0
+        assert incomplete["coverage"]["graph_complete"] is False
+        assert incomplete["coverage"]["html_pages"] == 7
+        assert any(
+            finding["type"] == "graph_claims_withheld" and finding["status"] == "withheld"
+            for finding in incomplete["findings"]
+        )
+        for unsafe_type in ("orphan_candidate", "unreachable_from_home_candidate", "internal_link_opportunity"):
+            assert unsafe_type not in incomplete["finding_counts"]
+        validate_public_dashboard(output / "complete" / "dashboard.html")
+        validate_public_dashboard(output / "incomplete" / "dashboard.html")
     secrets = scan_secrets()
     if secrets:
         raise RuntimeError("Potential secrets found:\n" + "\n".join(secrets))
-    print(json.dumps({"status": "ok", "plugin": "proofrank", "checks": ["manifest", "unit_tests", "demo", "dashboard_boundary", "secret_scan"]}, indent=2))
+    print(json.dumps({
+        "status": "ok",
+        "plugin": "proofrank",
+        "checks": [
+            "manifest",
+            "marketplace",
+            "unit_tests",
+            "complete_demo",
+            "incomplete_gate",
+            "dashboard_boundary",
+            "secret_scan",
+        ],
+    }, indent=2))
     return 0
 
 

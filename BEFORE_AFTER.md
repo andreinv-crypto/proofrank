@@ -18,6 +18,7 @@ ProofRank builds on lessons from a private, domain-specific SEO workflow. This r
 - Added a dependency-free interactive evidence dashboard.
 - Added portable verification, secret scanning, documentation, and an explicit safety boundary.
 - Preserved separate evidence states: `confirmed`, `candidate`, and `withheld`.
+- Added a GPT-5.6-built, one-command comparison that derives a deterministic 7-of-11 partial cache from the same synthetic fixture, emits `graph_claims_withheld`, and proves that unsupported graph conclusions are suppressed.
 
 ## Evidence
 

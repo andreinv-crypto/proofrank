@@ -12,6 +12,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 demo-output/
+demo-output-incomplete/
 .DS_Store
 Thumbs.db
 .vscode/
@@ -22,3 +23,6 @@ node_modules/
 dist/
 build/
 coverage/
+
+# Local video build products
+video/.build/

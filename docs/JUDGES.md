@@ -2,15 +2,16 @@
 
 ProofRank can be evaluated without rebuilding it, creating an account, or providing credentials.
 
-## Fastest path: bundled interactive demo
+## Fastest path: bundled evidence-gate comparison
 
-1. Download `showcase/proofrank-demo.html`.
-2. Open it in a modern desktop browser.
-3. Confirm the headline values: 11 known URLs, 100% HTML coverage, 20 evidence items, and 5 high-priority items.
-4. Open **Evidence**, filter severity to **high**, and select any row to inspect its source evidence and status.
-5. Open **Method** to inspect the coverage gate and decision boundary.
+1. Open `showcase/proofrank-incomplete-demo.html` in a modern desktop browser.
+2. Confirm 11 known URLs, 7 parsed pages, 63.64% coverage, `Graph claims: Withheld`, and an explicit `graph claims withheld` evidence row.
+3. Confirm that orphan, unreachable-from-home, and internal-link-opportunity conclusions are not promoted from the partial graph.
+4. Open `showcase/proofrank-demo.html` and confirm 11 known URLs, 100% coverage, and `Graph claims: Enabled`.
+5. Open **Evidence**, filter severity to **high**, and select a row to inspect its source evidence and status.
+6. Open **Method** to inspect the coverage gate and decision boundary.
 
-The HTML is a self-contained static artifact. It performs no network request, loads no external script, and contains no local input paths.
+Both HTML files are self-contained static artifacts. They perform no network request, load no external script, and contain no local input paths.
 
 ## Reproduce the demo
 
@@ -21,6 +22,14 @@ python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py
 ```
 
 Open `plugins/proofrank/demo-output/dashboard.html`.
+
+To reproduce both states in one run:
+
+```bash
+python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py --scenario both
+```
+
+Open `plugins/proofrank/demo-output/incomplete/dashboard.html`, then `plugins/proofrank/demo-output/complete/dashboard.html`.
 
 ## Verify the repository
 

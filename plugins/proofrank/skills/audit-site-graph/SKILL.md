@@ -81,6 +81,18 @@ python scripts/site_graph_audit.py \
 python scripts/render_dashboard.py --audit "out/audit.json" --output "out/dashboard.html"
 ```
 
+## Demonstrate the evidence gate
+
+Change to this Skill directory, then run both bundled synthetic scenarios to compare an incomplete graph with a complete one:
+
+```bash
+python scripts/run_demo.py --scenario both --output-dir "demo-output"
+```
+
+Open `demo-output/incomplete/dashboard.html` before `demo-output/complete/dashboard.html`. Confirm that the incomplete result contains `graph_claims_withheld` and does not promote orphan, unreachable, or internal-link-opportunity conclusions.
+
+Expect the incomplete result to report 11 known URLs, 7 parsed HTML pages, 63.64% coverage, and `graph_complete=false`. Expect the complete result to report 11 parsed pages, 100% coverage, and `graph_complete=true`.
+
 ## Outputs
 
 - `audit.json`: provenance, coverage, findings, pages, and links.

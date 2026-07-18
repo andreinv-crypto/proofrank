@@ -2,15 +2,17 @@
 
 # ProofRank
 
-**Evidence-first site graph intelligence for Codex.**
+**When evidence is incomplete, ProofRank refuses to guess.**
 
-[Open the bundled interactive demo](showcase/proofrank-demo.html)
+[Open the complete interactive demo](showcase/proofrank-demo.html) · [Open the incomplete-coverage demo](showcase/proofrank-incomplete-demo.html)
 
 ![ProofRank evidence-first dashboard](plugins/proofrank/assets/screenshot-dashboard.png)
 
 ProofRank turns URL inventories, saved sitemaps, and saved HTML caches into a reproducible graph audit. It separates directly observed facts, cautious candidates, and conclusions that the available coverage cannot support.
 
 The result is not another generic SEO content generator. It is a safety layer for deciding what a team should investigate before touching a live site.
+
+ProofRank grew from a constraint its creator, Andrei Zakharov, lives every day: every unnecessary computer action has a physical cost. That sharpened a universal product principle—automation should reduce unsupported work, not create more of it.
 
 ## What it detects
 
@@ -48,6 +50,14 @@ plugins/proofrank/demo-output/dashboard.html
 ```
 
 The fixture is fully synthetic and intentionally contains broken links, a noindex target, a noncanonical URL, an orphan candidate, malformed JSON-LD, and duplicate content.
+
+To reproduce the central evidence-gate comparison in one command:
+
+```bash
+python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py --scenario both
+```
+
+Open `plugins/proofrank/demo-output/incomplete/dashboard.html` first, then `plugins/proofrank/demo-output/complete/dashboard.html`. The same 11-URL fixture moves from 63.64% coverage with graph claims withheld to 100% coverage with the gate enabled.
 
 ## Run on saved site data
 
@@ -103,7 +113,7 @@ The verification runs unit tests, generates the demo in a temporary folder, vali
 
 ## OpenAI Build Week 2026
 
-ProofRank was generalized and packaged during the OpenAI Build Week submission period using Codex and GPT-5.6. The project demonstrates how an agent can combine deterministic tools, explicit uncertainty, and a coherent user experience on a real operational problem.
+ProofRank was generalized and packaged during the OpenAI Build Week submission period using Codex and GPT-5.6. GPT-5.6 also implemented and tested the reproducible incomplete-coverage scenario used in the demo. The project shows how an agent can combine deterministic tools, explicit uncertainty, and a coherent user experience on a real operational problem.
 
 **Track:** Work and productivity.
 

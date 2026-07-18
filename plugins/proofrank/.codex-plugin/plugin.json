@@ -1,7 +1,7 @@
 {
   "name": "proofrank",
-  "version": "0.1.0",
-  "description": "Evidence-first, read-only site graph audits for Codex.",
+  "version": "0.2.0",
+  "description": "Evidence-first site graph audits that withhold unsupported conclusions.",
   "author": {
     "name": "Andrei Zakharov"
   },
@@ -10,15 +10,15 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "ProofRank",
-    "shortDescription": "Evidence-first site graph intelligence.",
-    "longDescription": "Audit multilingual site graphs from saved inventories, sitemaps, and HTML caches. ProofRank separates confirmed evidence, cautious candidates, and withheld conclusions before any live SEO action.",
+    "shortDescription": "Evidence before action. No guessing from partial crawls.",
+    "longDescription": "Audit multilingual site graphs from saved inventories, sitemaps, and HTML caches. ProofRank separates confirmed evidence, cautious candidates, and withheld conclusions—and stops whole-site claims when coverage is incomplete.",
     "developerName": "Andrei Zakharov",
     "category": "Productivity",
     "capabilities": ["Read-only audit", "Local reports", "Interactive dashboard"],
     "defaultPrompt": [
       "Audit this site's saved graph without changing anything.",
       "Find orphan and internal-link candidates from this cache.",
-      "Explain which SEO conclusions the current coverage supports."
+      "Explain what is confirmed, candidate, or withheld by the current coverage."
     ],
     "brandColor": "#56D9D2",
     "composerIcon": "./assets/icon.svg",

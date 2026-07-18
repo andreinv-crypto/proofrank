@@ -1054,6 +1054,21 @@ def main(argv=None):
     homepage_parsed = bool(analyses.get(homepage, {}).get("html_available"))
     graph_complete = bool(known_total and html_coverage >= args.complete_threshold and homepage_parsed and not sitemap_data["unresolved"])
 
+    if not graph_complete:
+        add_finding(
+            findings,
+            "graph_claims_withheld",
+            "info",
+            "withheld",
+            evidence=(
+                f"HTML coverage={html_coverage:.2%} ({html_pages}/{known_total}); "
+                f"completeness threshold={args.complete_threshold:.2%}; "
+                f"homepage parsed={'yes' if homepage_parsed else 'no'}; "
+                f"unresolved sitemaps={len(sitemap_data['unresolved'])}. "
+                "Whole-site orphan, click-depth, unreachable-from-home, and internal-link-opportunity claims are withheld."
+            ),
+        )
+
     inbound, inbound_content, outgoing, depths, observed = build_graph(known, analyses, links, site, graph_complete, findings)
     duplicate_findings(analyses, findings, args.near_duplicate_threshold, args.max_pairs)
     cannibalization_findings(known, analyses, findings, args.cannibalization_threshold, args.max_pairs)

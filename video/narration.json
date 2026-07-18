@@ -1,0 +1,87 @@
+[
+  {
+    "id": "01-founder-a",
+    "scene": "founder",
+    "text": "I’m Andrei Zakharov. I’m fully paralysed, so every click and repetitive computer task has a physical cost."
+  },
+  {
+    "id": "02-founder-b",
+    "scene": "founder",
+    "text": "I’ve worked in SEO and web operations for years. Codex helps me turn that judgement into repeatable software with fewer manual steps."
+  },
+  {
+    "id": "03-disclosure",
+    "scene": "disclosure",
+    "text": "This video uses AI-assisted English narration, reviewed and approved by me."
+  },
+  {
+    "id": "04-risk-a",
+    "scene": "risk",
+    "text": "An AI can sound certain after seeing only part of a website."
+  },
+  {
+    "id": "05-risk-b",
+    "scene": "risk",
+    "text": "On a live site, a partial crawl can trigger risky redirect or noindex decisions. Confidence is not evidence."
+  },
+  {
+    "id": "06-promise",
+    "scene": "promise",
+    "text": "ProofRank is a read-only Codex plugin that labels conclusions confirmed, candidate, or withheld. When evidence is incomplete, ProofRank refuses to guess."
+  },
+  {
+    "id": "07-codex-a",
+    "scene": "codex",
+    "text": "Inside Codex, I invoke the audit-site-graph skill on a synthetic eleven-page website."
+  },
+  {
+    "id": "08-codex-b",
+    "scene": "codex",
+    "text": "Using GPT-5.6, Codex chooses the safe local workflow, runs the deterministic Python engine, checks completeness, and explains the result. No API key or rebuild is required."
+  },
+  {
+    "id": "09-incomplete-a",
+    "scene": "incomplete",
+    "text": "First, the cache covers only sixty-four per cent of known URLs. The gate fails."
+  },
+  {
+    "id": "10-incomplete-b",
+    "scene": "incomplete",
+    "text": "A page with no observed inbound links may look orphaned, but the graph is incomplete. ProofRank marks that conclusion withheld and suppresses graph-level opportunities. It stops where the evidence stops."
+  },
+  {
+    "id": "11-complete-a",
+    "scene": "complete",
+    "text": "Now I load the complete cache. Coverage reaches one hundred per cent, the homepage is parsed, and the gate passes."
+  },
+  {
+    "id": "12-complete-b",
+    "scene": "complete",
+    "text": "ProofRank surfaces a confirmed broken link, a noindex target, malformed structured data, and cautious orphan candidates. I filter high-priority findings and open the evidence drawer."
+  },
+  {
+    "id": "13-safety",
+    "scene": "safety",
+    "text": "The dashboard is interactive and self-contained. It strips local paths, loads no external scripts, and authorises no CMS, redirect, content, or other live-site write."
+  },
+  {
+    "id": "14-build-a",
+    "scene": "architecture",
+    "text": "During Build Week, Codex with GPT-5.6 helped generalise my private workflow into an installable plugin: refactoring the engine, designing the evidence policy, generating safe fixtures, and building the interface."
+  },
+  {
+    "id": "15-build-b",
+    "scene": "architecture",
+    "text": "It also helped write tests, run official validators, scan for secrets, and check desktop and mobile behaviour."
+  },
+  {
+    "id": "16-scale-a",
+    "scene": "scale",
+    "text": "The public demo is synthetic. The private case covered three thousand one hundred and thirty-seven URLs with ninety-nine point eight seven per cent parsed coverage."
+  },
+  {
+    "id": "17-scale-b",
+    "scene": "outro",
+    "text": "ProofRank gives teams inspectable evidence—and gives AI the discipline to stop. When evidence is incomplete, ProofRank refuses to guess."
+  }
+]
