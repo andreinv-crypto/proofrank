@@ -12,7 +12,7 @@ ProofRank turns URL inventories, saved sitemaps, and saved HTML caches into a re
 
 The result is not another generic SEO content generator. It is a safety layer for deciding what a team should investigate before touching a live site.
 
-ProofRank grew from lessons in an earlier private workflow built with previous Codex models, and from a constraint its creator, Andrei Zakharov, lives every day: every click and correction has a physical cost. Codex does not replace his expertise; it removes physical friction between an idea and a working product. That sharpened a universal product principle—automation should reduce unsupported work, not create more of it.
+ProofRank grew from lessons in an earlier private workflow built with previous Codex models, and from a constraint its creator, Andrei Zakharov, lives every day: every click and correction has a physical cost. For years, he has built and grown online projects across marketing, SEO, and automation. Codex helps turn that experience and new ideas into working software with less physical effort and more creative freedom. That sharpened a universal product principle—automation should reduce unsupported work, not create more of it.
 
 ## What it detects
 

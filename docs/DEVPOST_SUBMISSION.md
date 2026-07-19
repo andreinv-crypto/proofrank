@@ -13,7 +13,7 @@
 
 ### Inspiration
 
-I’m Andrei Zakharov. I’m fully paralysed, so every click and correction has a physical cost. Years of SEO work taught me that bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
+I’m Andrei Zakharov. I’m fully paralysed, so every click and correction has a physical cost. For years, I have built and grown online projects across digital marketing, SEO, and automation. Codex helps turn that experience and new ideas into working software with less physical effort and more creative freedom. That same constraint shaped ProofRank: bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
 
 ProofRank grew from that constraint, but its value is universal: SEO teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
 
