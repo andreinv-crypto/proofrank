@@ -4,10 +4,10 @@ ProofRank can be evaluated without rebuilding it, creating an account, or provid
 
 ## Fastest path: bundled evidence-gate comparison
 
-1. Open `showcase/proofrank-incomplete-demo.html` in a modern desktop browser.
+1. Open the live [incomplete-coverage demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html) in a modern desktop browser.
 2. Confirm 11 known URLs, 7 parsed pages, 63.64% coverage, `Graph claims: Withheld`, and an explicit `graph claims withheld` evidence row.
 3. Confirm that orphan, unreachable-from-home, and internal-link-opportunity conclusions are not promoted from the partial graph.
-4. Open `showcase/proofrank-demo.html` and confirm 11 known URLs, 100% coverage, and `Graph claims: Enabled`.
+4. Open the live [complete demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html) and confirm 11 known URLs, 100% coverage, and `Graph claims: Enabled`.
 5. Open **Evidence**, filter severity to **high**, and select a row to inspect its source evidence and status.
 6. Open **Method** to inspect the coverage gate and decision boundary.
 

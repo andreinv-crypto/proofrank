@@ -4,7 +4,7 @@
 
 **When evidence is incomplete, ProofRank refuses to guess.**
 
-[Open the complete interactive demo](showcase/proofrank-demo.html) · [Open the incomplete-coverage demo](showcase/proofrank-incomplete-demo.html)
+[Open the complete interactive demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html) · [Open the incomplete-coverage demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html)
 
 ![ProofRank evidence-first dashboard](plugins/proofrank/assets/screenshot-dashboard.png)
 

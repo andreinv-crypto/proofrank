@@ -5,7 +5,8 @@
 - **Project name:** ProofRank
 - **Track:** Work & Productivity
 - **Tagline:** When evidence is incomplete, ProofRank refuses to guess.
-- **Repository URL:** `[ADD AFTER GITHUB PUBLICATION]`
+- **Repository URL:** https://github.com/andreinv-crypto/proofrank
+- **Live interactive demo:** https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html
 - **Public YouTube demo:** `[ADD AFTER VIDEO UPLOAD]`
 - **Codex /feedback Session ID:** `[ADD FROM THE CORE BUILD TASK]`
 
@@ -73,7 +74,7 @@ Codex, GPT-5.6, Codex Skills, Codex plugins, Python, HTML, CSS, JavaScript, JSON
 
 ## Testing instructions
 
-The repository contains two pre-generated interactive demos. Open `showcase/proofrank-incomplete-demo.html` first, then `showcase/proofrank-demo.html`. No rebuilding, login, API key, or network request is required.
+The repository contains two pre-generated interactive demos. Open the [incomplete-coverage demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html) first, then the [complete demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html). No rebuilding, login, API key, or network request is required.
 
 To regenerate the same result with Python 3.10+:
 
