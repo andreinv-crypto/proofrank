@@ -13,7 +13,7 @@
 
 ### Inspiration
 
-I’m Andrei Zakharov. I’m fully paralysed, so every unnecessary computer action has a physical cost. Years of SEO work taught me that bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
+I’m Andrei Zakharov. I’m fully paralysed, so every click and correction has a physical cost. Years of SEO work taught me that bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
 
 ProofRank grew from that constraint, but its value is universal: SEO teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
 
@@ -33,13 +33,13 @@ ProofRank has three layers:
 2. a Codex Skill that selects safe inputs, enforces coverage gates, and interprets the evidence without authorizing live changes;
 3. a single-file static dashboard that contains sanitized audit results and requires no server, account, analytics, or external JavaScript.
 
-The public demo uses fully synthetic data. The design came from a private, domain-specific workflow for a multilingual travel portal with more than 3,000 normalized URLs, but no private site data, credentials, analytics exports, or local paths are included.
+The public demo uses fully synthetic data. The design came from a private, domain-specific workflow for a multilingual travel portal with more than 3,000 normalized URLs. That earlier workflow was built with previous Codex models. No private site data, credentials, analytics exports, or local paths are included.
 
 ### How Codex and GPT-5.6 were used
 
-Codex with GPT-5.6 helped turn the original domain-specific workflow into a portable product: mapping the reusable architecture, refactoring the engine, authoring the Codex Skill and plugin manifests, generating a synthetic edge-case fixture, building the dashboard, writing tests, running official plugin/skill validators, scanning for secrets, and executing desktop/mobile browser QA.
+During the Build Week submission period, Codex with GPT-5.6 helped turn those earlier lessons into a portable product: mapping the reusable architecture, refactoring the engine, authoring the Codex Skill and plugin manifests, generating a synthetic edge-case fixture, building the dashboard, writing tests, running official plugin/skill validators, scanning for secrets, and executing desktop/mobile browser QA.
 
-For the final Build Week extension, GPT-5.6 with Ultra reasoning implemented and tested the reproducible incomplete-coverage scenario. It derives a deterministic 7-of-11 cache from the same public fixture, emits an explicit `graph_claims_withheld` evidence item, and verifies that orphan, unreachable, and internal-link-opportunity claims are not promoted when the gate fails.
+For the final Build Week extension, GPT-5.6 with Ultra reasoning helped implement and test the reproducible incomplete-coverage scenario. It derives a deterministic 7-of-11 cache from the same public fixture, emits an explicit `graph_claims_withheld` evidence item, and verifies that orphan, unreachable, and internal-link-opportunity claims are not promoted when the gate fails.
 
 The model does not manufacture graph facts. Deterministic code calculates coverage and findings; Codex supplies the workflow, safety policy, interpretation, and product experience around that evidence.
 

@@ -1,191 +1,103 @@
-# ProofRank demo script — final 2:49
+# ProofRank demo script — video v2 final 2:39.917
 
-English narration, approximately 338 words. Final local export: 2:49.
+English narration: 291 words. The final local export is 2:39.917 at 1920×1080 and 30 fps.
 
-## 0:00–0:18 — Founder context
+## 0:00–0:20 — Founder context
 
-**Show:** A clean founder card. Use the ProofRank logo and Andrei’s name; no portrait or medical imagery.
+**Show:** Andrei’s founder card; no portrait or medical imagery. Keep the AI-voice disclosure visible on the card.
 
 **On screen:**
 
 ```text
 Andrei Zakharov
 SEO & web operations
-Every click has a physical cost
+Codex removes physical friction between expertise and a working product.
+AI-generated voice · Script written and approved by Andrei Zakharov
 ```
 
 **Narration:**
 
-> I’m Andrei Zakharov. I’m fully paralysed, so every click and repetitive computer task has a physical cost. I’ve worked in SEO and web operations for years. Codex helps me turn that judgement into repeatable software with fewer manual steps.
+> I’m Andrei Zakharov. I’m fully paralysed, so every click and correction has a physical cost. I’ve worked in SEO for years. Codex doesn’t replace my expertise. It removes the physical friction between an idea and a working product.
 
-## 0:18–0:24 — Narration disclosure
+## 0:20–0:32 — The risk
 
-**Show:** The dashboard appears behind a small disclosure card.
-
-**On screen:**
-
-```text
-AI-assisted English narration
-Script reviewed and approved by Andrei Zakharov
-```
+**Show:** `11 known URLs → 7 parsed → 63.64% coverage`. Stop a premature `ORPHAN` label.
 
 **Narration:**
 
-> This video uses AI-assisted English narration, reviewed and approved by me.
+> An AI can sound certain after seeing only part of a website. On a live site, that can trigger risky changes. Confidence is not evidence.
 
-## 0:24–0:36 — The risk
+## 0:32–0:43 — Product promise
 
-**Show:** `11 known URLs → 7 parsed → 64% coverage`. A premature `ORPHAN` label is stopped by the coverage gate.
-
-**On screen:**
-
-```text
-Partial crawl ≠ complete evidence
-Confidence is not evidence
-```
+**Show:** `CONFIRMED · CANDIDATE · WITHHELD`.
 
 **Narration:**
 
-> An AI can sound certain after seeing only part of a website. On a live site, a partial crawl can trigger risky redirect or noindex decisions. Confidence is not evidence.
+> ProofRank labels conclusions confirmed, candidate, or withheld. When evidence is incomplete, this read-only Codex plugin refuses to guess.
 
-## 0:36–0:48 — Product promise
+## 0:43–1:00 — Meaningful Codex and GPT-5.6 use
 
-**Show:** ProofRank dashboard, then the three evidence states.
-
-**On screen:**
-
-```text
-CONFIRMED · CANDIDATE · WITHHELD
-When evidence is incomplete, ProofRank refuses to guess.
-```
+**Show:** The exact synthetic, read-only Codex task and the `audit-site-graph` Skill.
 
 **Narration:**
 
-> ProofRank is a read-only Codex plugin that labels conclusions confirmed, candidate, or withheld. When evidence is incomplete, ProofRank refuses to guess.
+> Inside Codex, I run the audit-site-graph skill on a synthetic eleven-page website. GPT-5.6 selects the safe local workflow and explains the result. Deterministic Python calculates the facts.
 
-## 0:48–1:08 — Meaningful Codex and GPT-5.6 use
+## 1:00–1:18 — Incomplete evidence
 
-**Show:** The exact Codex task, the Skill, the deterministic engine run, and the generated dashboard.
-
-```text
-Use $audit-site-graph to audit the bundled synthetic dataset.
-Keep the run read-only.
-```
-
-**On screen:**
-
-```text
-Codex + GPT-5.6
-$audit-site-graph
-Synthetic data · Read-only
-```
+**Show:** `63.64%`, failed gate, and withheld graph claims.
 
 **Narration:**
 
-> Inside Codex, I invoke the audit-site-graph skill on a synthetic eleven-page website. Using GPT-5.6, Codex chooses the safe local workflow, runs the deterministic Python engine, checks completeness, and explains the result. No API key or rebuild is required.
+> First, only seven of eleven pages are parsed: sixty-three point six four per cent coverage. The gate fails. ProofRank withholds the orphan conclusion and graph-level opportunities. It stops where the evidence stops.
 
-## 1:08–1:29 — Incomplete evidence
+## 1:18–1:35 — Complete evidence
 
-**Show:** Open the incomplete-cache result. Highlight `64%`, the failed gate, and a `WITHHELD` finding.
-
-**On screen:**
-
-```text
-64% HTML coverage
-COVERAGE GATE: FAILED
-
-Orphan conclusion: WITHHELD
-Graph-level opportunities: SUPPRESSED
-```
+**Show:** `100%`, enabled gate, High filter, and evidence drawer.
 
 **Narration:**
 
-> First, the cache covers only sixty-four per cent of known URLs. The gate fails. A page with no observed inbound links may look orphaned, but the graph is incomplete. ProofRank marks that conclusion withheld and suppresses graph-level opportunities. It stops where the evidence stops.
+> With the complete cache, coverage reaches one hundred per cent, and the gate passes. ProofRank surfaces confirmed technical issues and cautious candidates. I filter high-priority findings and inspect their evidence.
 
-## 1:29–1:51 — Complete evidence
+## 1:35–1:43 — Safety boundary
 
-**Show:** Switch to the complete-cache result. Coverage changes to `100%`; open Evidence, select High, and open the evidence drawer.
-
-**On screen:**
-
-```text
-100% HTML coverage
-COVERAGE GATE: PASSED
-
-Evidence is now actionable for review
-```
+**Show:** Method tab and the read-only safety panel.
 
 **Narration:**
 
-> Now I load the complete cache. Coverage reaches one hundred per cent, the homepage is parsed, and the gate passes. ProofRank surfaces a confirmed broken link, a noindex target, malformed structured data, and cautious orphan candidates. I filter high-priority findings and open the evidence drawer.
+> The self-contained dashboard strips local paths, loads no external scripts, and authorises no live-site write.
 
-## 1:51–2:05 — Safety boundary
+## 1:43–2:11 — Truthful Build Week boundary
 
-**Show:** Method tab and safety panel. Highlight `READ-ONLY`, `LOCAL`, and `NO EXTERNAL REQUESTS`.
-
-**On screen:**
-
-```text
-READ-ONLY
-No live-site writes
-No external scripts
-Local paths removed
-```
+**Show:** `Earlier workflow / previous Codex models → GPT-5.6 → evidence gate → Ultra reasoning → reusable plugin` plus QA checks.
 
 **Narration:**
 
-> The dashboard is interactive and self-contained. It strips local paths, loads no external scripts, and authorises no CMS, redirect, content, or other live-site write.
+> ProofRank grew from an earlier workflow built with previous Codex models. During Build Week, GPT-5.6 helped turn it into a reusable plugin. Using Ultra reasoning, GPT-5.6 helped implement and test this reproducible evidence-gate extension. Codex also ran validators, secret scans, and desktop and mobile checks.
 
-## 2:05–2:29 — Build Week implementation
+## 2:11–2:20 — Real scale
 
-**Show:** Architecture, then short cuts of the Skill, plugin manifest, passing tests, validators, and mobile dashboard.
-
-```text
-Saved site data
-↓
-Deterministic Python engine
-↓
-Evidence policy
-↓
-Codex interpretation
-↓
-Interactive dashboard
-
-Tests passed · Validators passed · Secret scan passed
-```
+**Show:** 11 synthetic public URLs beside the sanitized 3,137-URL private case.
 
 **Narration:**
 
-> During Build Week, Codex with GPT-5.6 helped generalise my private workflow into an installable plugin: refactoring the engine, designing the evidence policy, generating safe fixtures, building the interface, writing tests, running official validators, scanning for secrets, and checking desktop and mobile behaviour.
+> The public demo is synthetic. The private workflow proved the approach across three thousand one hundred and thirty-seven URLs.
 
-## 2:29–2:49 — Real scale and close
+## 2:20–2:40 — Close
 
-**Show:** Sanitised case card, then ProofRank logo and final dashboard frame.
-
-**On screen:**
-
-```text
-PUBLIC DEMO
-11 synthetic URLs
-
-PRIVATE OPERATIONAL CASE
-3,137 URLs
-99.87% parsed coverage
-
-When evidence is incomplete,
-ProofRank refuses to guess.
-```
+**Show:** `Less energy translating intent. More energy building.`
 
 **Narration:**
 
-> The public demo is synthetic. The private case covered three thousand one hundred and thirty-seven URLs with ninety-nine point eight seven per cent parsed coverage. ProofRank gives teams inspectable evidence—and gives AI the discipline to stop. When evidence is incomplete, ProofRank refuses to guess.
+> Better models mean fewer correction cycles for me. ProofRank applies the same principle to AI: incomplete evidence should stop it, not create more work through a confident mistake. I spend less energy translating intent—and more energy building what I know is possible.
 
-## Recording checklist
+## Final export checklist
 
-- Keep the final video below 3:00 and target 1920×1080 at 30 fps.
-- Use the approved first-person phrase `I’m fully paralysed`.
-- Burn accurate English subtitles into the final export.
-- Keep the AI-assisted narration disclosure visible and audible.
-- Mention both Codex and GPT-5.6 in the audio.
+- Keep the final video below 3:00; the reviewed v2 export is 2:39.917.
+- Use the approved first-person phrase `I’m fully paralysed` as product context, not pity framing.
+- Keep the AI-generated voice disclosure visible on the founder card.
+- Burn exactly one accurate English subtitle layer into the MP4.
+- Do not place or upload a same-basename `.srt`; local players may auto-load it and duplicate the burned captions.
+- Mention Codex and GPT-5.6 in audio; describe Ultra once as the reasoning setting used for the extension.
 - Show only synthetic public data; do not expose private paths, accounts, or case-study inputs.
-- Upload as a public YouTube video only after Andrei approves the final local MP4.
+- Upload or publish nothing until Andrei approves the final local MP4.

@@ -1,10 +1,10 @@
 # Build Week development boundary
 
-ProofRank builds on lessons from a private, domain-specific SEO workflow. This repository contains the new, portable extension created during the OpenAI Build Week submission period.
+ProofRank builds on lessons from a private, domain-specific SEO workflow created with previous Codex models. This repository contains the new, portable extension created during the OpenAI Build Week submission period.
 
 ## Prior work
 
-- A private TorreviejaTour workflow used local scripts and saved operational data to inspect one multilingual WordPress portal.
+- A private TorreviejaTour workflow built with previous Codex models used local scripts and saved operational data to inspect one multilingual WordPress portal.
 - The private project contained site-specific paths, vocabulary, analytics exports, credentials, backups, and production runbooks.
 - That private project is not included in this repository and is not the submitted artifact.
 
@@ -18,7 +18,7 @@ ProofRank builds on lessons from a private, domain-specific SEO workflow. This r
 - Added a dependency-free interactive evidence dashboard.
 - Added portable verification, secret scanning, documentation, and an explicit safety boundary.
 - Preserved separate evidence states: `confirmed`, `candidate`, and `withheld`.
-- Added a GPT-5.6-built, one-command comparison that derives a deterministic 7-of-11 partial cache from the same synthetic fixture, emits `graph_claims_withheld`, and proves that unsupported graph conclusions are suppressed.
+- Using Ultra reasoning, GPT-5.6 helped build and test a one-command comparison that derives a deterministic 7-of-11 partial cache from the same synthetic fixture, emits `graph_claims_withheld`, and proves that unsupported graph conclusions are suppressed.
 
 ## Evidence
 

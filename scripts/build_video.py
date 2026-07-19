@@ -95,10 +95,17 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--ffmpeg", required=True, type=Path)
     parser.add_argument("--ffprobe", required=True, type=Path)
+    parser.add_argument(
+        "--srt-output",
+        type=Path,
+        help="Optional sidecar subtitle path. Captions are always burned into the MP4.",
+    )
     args = parser.parse_args()
 
     for field in ("manifest", "audio_dir", "assets_dir", "build_dir", "output", "ffmpeg", "ffprobe"):
         setattr(args, field, getattr(args, field).resolve())
+    if args.srt_output is not None:
+        args.srt_output = args.srt_output.resolve()
 
     segments = json.loads(args.manifest.read_text(encoding="utf-8"))
     args.build_dir.mkdir(parents=True, exist_ok=True)
@@ -163,7 +170,12 @@ def main() -> int:
             else:
                 allocated += seconds * weight / sum(weights)
                 cue_end = current + allocated
-            wrapped = "\n".join(textwrap.wrap(cue, width=54, break_long_words=False))
+            wrapped = "\n".join(textwrap.wrap(
+                cue,
+                width=54,
+                break_long_words=False,
+                break_on_hyphens=False,
+            ))
             subtitle_rows.append((cue_start, cue_end, wrapped))
         current += seconds
         scene_windows[scene][1] = current
@@ -221,11 +233,16 @@ def main() -> int:
         "-t", f"{total_duration:.3f}", str(args.output.resolve()),
     ], cwd=args.build_dir)
 
-    shutil.copy2(srt, args.output.with_suffix(".srt"))
+    sidecar = None
+    if args.srt_output is not None:
+        args.srt_output.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(srt, args.srt_output)
+        sidecar = str(args.srt_output)
     result = {
         "status": "ok",
         "output": str(args.output.resolve()),
-        "subtitles": str(args.output.with_suffix('.srt').resolve()),
+        "burned_subtitles": True,
+        "sidecar_subtitles": sidecar,
         "duration_seconds": round(duration(args.ffprobe, args.output), 3),
         "narration_segments": len(segments),
         "scenes": list(scene_windows),

@@ -12,7 +12,7 @@ ProofRank turns URL inventories, saved sitemaps, and saved HTML caches into a re
 
 The result is not another generic SEO content generator. It is a safety layer for deciding what a team should investigate before touching a live site.
 
-ProofRank grew from a constraint its creator, Andrei Zakharov, lives every day: every unnecessary computer action has a physical cost. That sharpened a universal product principle—automation should reduce unsupported work, not create more of it.
+ProofRank grew from lessons in an earlier private workflow built with previous Codex models, and from a constraint its creator, Andrei Zakharov, lives every day: every click and correction has a physical cost. Codex does not replace his expertise; it removes physical friction between an idea and a working product. That sharpened a universal product principle—automation should reduce unsupported work, not create more of it.
 
 ## What it detects
 
@@ -113,7 +113,7 @@ The verification runs unit tests, generates the demo in a temporary folder, vali
 
 ## OpenAI Build Week 2026
 
-ProofRank was generalized and packaged during the OpenAI Build Week submission period using Codex and GPT-5.6. GPT-5.6 also implemented and tested the reproducible incomplete-coverage scenario used in the demo. The project shows how an agent can combine deterministic tools, explicit uncertainty, and a coherent user experience on a real operational problem.
+During the OpenAI Build Week submission period, GPT-5.6 helped generalize and package those earlier lessons as ProofRank. Using Ultra reasoning, GPT-5.6 helped implement and test the reproducible incomplete-coverage extension shown in the demo. The project shows how an agent can combine deterministic tools, explicit uncertainty, and a coherent user experience on a real operational problem.
 
 **Track:** Work and productivity.
 
