@@ -3,7 +3,7 @@
 ## Required fields
 
 - **Project name:** ProofRank
-- **Track:** Work and productivity
+- **Track:** Work & Productivity
 - **Tagline:** When evidence is incomplete, ProofRank refuses to guess.
 - **Repository URL:** `[ADD AFTER GITHUB PUBLICATION]`
 - **Public YouTube demo:** `[ADD AFTER VIDEO UPLOAD]`
@@ -13,13 +13,13 @@
 
 ### Inspiration
 
-I’m Andrei Zakharov. I’m fully paralysed, so every click and correction has a physical cost. For years, I have built and grown online projects across digital marketing, SEO, and automation. Codex helps turn that experience and new ideas into working software with less physical effort and more creative freedom. That same constraint shaped ProofRank: bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
+I’m Andrei Zakharov. For over 13 years, I have built and grown online projects across digital marketing, SEO, and automation. I’m fully paralysed, so every click and correction has a physical cost. Codex helps me turn experience and new ideas into working software with less physical effort and more creative freedom. That same constraint shaped ProofRank: bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
 
-ProofRank grew from that constraint, but its value is universal: SEO teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
+ProofRank grew from that constraint, but its value is universal: SEO and web operations teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
 
 ### What it does
 
-ProofRank is a read-only Codex plugin that converts saved URL inventories, sitemaps, and HTML caches into a reproducible site graph audit. It detects coverage gaps, click depth, orphan and unreachable-page candidates, broken/noindex/noncanonical targets, schema problems, duplicate content, cautious topic conflicts, and contextual internal-link opportunities.
+ProofRank is a read-only Codex plugin for SEO and web operations teams. It converts saved URL inventories, sitemaps, and HTML caches into a reproducible site graph audit. It detects coverage gaps, click depth, orphan and unreachable-page candidates, broken/noindex/noncanonical targets, schema problems, duplicate content, cautious topic conflicts, and contextual internal-link opportunities.
 
 Every finding carries an evidence status: confirmed, candidate, or withheld. Graph-level conclusions are withheld until coverage clears an explicit completeness gate. A dependency-free interactive dashboard lets a reviewer filter the evidence, inspect individual findings, and understand the decision boundary before anyone changes a live site.
 
@@ -30,18 +30,18 @@ The bundled comparison makes the behaviour visible: the same 11-URL synthetic fi
 ProofRank has three layers:
 
 1. a deterministic, standard-library Python engine for parsing, normalization, graph analysis, and portable JSON/CSV/Markdown artifacts;
-2. a Codex Skill that selects safe inputs, enforces coverage gates, and interprets the evidence without authorizing live changes;
+2. a Codex Skill that defines the safe local workflow and evidence boundary for Codex to follow and explain, without authorizing live changes;
 3. a single-file static dashboard that contains sanitized audit results and requires no server, account, analytics, or external JavaScript.
 
-The public demo uses fully synthetic data. The design came from a private, domain-specific workflow for a multilingual travel portal with more than 3,000 normalized URLs. That earlier workflow was built with previous Codex models. No private site data, credentials, analytics exports, or local paths are included.
+The public demo uses fully synthetic data. The design came from an earlier private, domain-specific workflow built with previous Codex models. That workflow processed 3,137 active pages returning HTTP 200 with 99.87% HTML coverage and informed ProofRank’s design. It is not part of this submission. No private URLs, content, credentials, analytics exports, backups, or local paths are included.
 
 ### How Codex and GPT-5.6 were used
 
 During the Build Week submission period, Codex with GPT-5.6 helped turn those earlier lessons into a portable product: mapping the reusable architecture, refactoring the engine, authoring the Codex Skill and plugin manifests, generating a synthetic edge-case fixture, building the dashboard, writing tests, running official plugin/skill validators, scanning for secrets, and executing desktop/mobile browser QA.
 
-For the final Build Week extension, GPT-5.6 with Ultra reasoning helped implement and test the reproducible incomplete-coverage scenario. It derives a deterministic 7-of-11 cache from the same public fixture, emits an explicit `graph_claims_withheld` evidence item, and verifies that orphan, unreachable, and internal-link-opportunity claims are not promoted when the gate fails.
+For the final Build Week extension, Andrei used GPT-5.6 at the Ultra reasoning level while implementing and testing the reproducible incomplete-coverage scenario. Deterministic Python derives a 7-of-11 cache from the same public fixture, emits an explicit `graph_claims_withheld` evidence item, and verifies that orphan, unreachable, and internal-link-opportunity claims are not promoted when the gate fails.
 
-The model does not manufacture graph facts. Deterministic code calculates coverage and findings; Codex supplies the workflow, safety policy, interpretation, and product experience around that evidence.
+The model does not manufacture graph facts. Deterministic Python calculates coverage and findings; Codex with GPT-5.6 follows the Skill’s safe local workflow, explains the result, and helps run validation.
 
 ### Challenges
 
@@ -65,7 +65,7 @@ Agents become more trustworthy when uncertainty is part of the output contract. 
 
 ### What's next
 
-Next steps are read-only adapters for crawler exports and Search Console, comparison reports between audit snapshots, configurable evidence policies for larger teams, and an optional hosted viewer that preserves the same no-write safety boundary.
+Next steps are read-only adapters for crawler exports and Search Console, comparison reports between audit snapshots, configurable evidence policies for larger teams, and an optional hosted viewer that preserves the same no-write safety boundary. The same evidence-gate pattern can also protect other AI workflows that act on incomplete data.
 
 ## Technologies
 

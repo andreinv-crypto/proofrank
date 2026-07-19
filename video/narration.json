@@ -2,12 +2,12 @@
   {
     "id": "01-founder-a",
     "scene": "founder",
-    "text": "I’m Andrei Zakharov. I’m fully paralysed, so every click and correction has a physical cost."
+    "text": "I’m Andrei Zakharov. For over thirteen years, I’ve built and grown online projects across marketing, SEO, and automation."
   },
   {
     "id": "02-founder-b",
     "scene": "founder",
-    "text": "For years, I’ve built and grown online projects across marketing, SEO, and automation. Codex turns that experience—and new ideas—into working software with far less physical effort and far more creative freedom."
+    "text": "I’m fully paralysed, so every click and correction has a physical cost. Codex helps me turn experience and new ideas into working software—with less physical effort and more creative freedom."
   },
   {
     "id": "04-risk-a",
@@ -22,7 +22,7 @@
   {
     "id": "06-promise",
     "scene": "promise",
-    "text": "ProofRank labels conclusions confirmed, candidate, or withheld. When evidence is incomplete, this read-only Codex plugin refuses to guess."
+    "text": "ProofRank is a read-only Codex plugin for SEO and web operations teams. It separates confirmed findings from candidates—and withholds site-wide conclusions when the crawl is incomplete."
   },
   {
     "id": "07-codex-a",
@@ -32,7 +32,7 @@
   {
     "id": "08-codex-b",
     "scene": "codex",
-    "text": "GPT-5.6 selects the safe local workflow and explains the result. Deterministic Python calculates the facts."
+    "text": "Here, Codex with GPT-5.6 follows the Skill’s safe local workflow and explains the result. Deterministic Python calculates the facts."
   },
   {
     "id": "09-incomplete-a",
@@ -57,26 +57,26 @@
   {
     "id": "13-safety",
     "scene": "safety",
-    "text": "The self-contained dashboard strips local paths, loads no external scripts, and authorises no live-site write."
+    "text": "The self-contained dashboard strips local paths, loads no external scripts, and performs no live-site writes."
   },
   {
     "id": "14-build-a",
     "scene": "architecture",
-    "text": "ProofRank grew from an earlier workflow built with previous Codex models. During Build Week, GPT-5.6 helped turn it into a reusable plugin."
+    "text": "ProofRank grew from an earlier private workflow built with previous Codex models. During Build Week, Codex with GPT-5.6 helped turn those lessons into a reusable plugin."
   },
   {
     "id": "15-build-b",
     "scene": "architecture",
-    "text": "Using Ultra reasoning, GPT-5.6 helped implement and test this reproducible evidence-gate extension. Codex also ran validators, secret scans, and desktop and mobile checks."
+    "text": "I used GPT-5.6 at the Ultra reasoning level to implement and test this reproducible evidence-gate extension. Codex also ran validators, secret scans, and desktop and mobile checks."
   },
   {
     "id": "16-scale-a",
     "scene": "scale",
-    "text": "The public demo is synthetic. The private workflow proved the approach across three thousand one hundred and thirty-seven URLs."
+    "text": "The public demo is synthetic. An earlier private workflow processed three thousand one hundred and thirty-seven URLs at ninety-nine point eight seven per cent HTML coverage—and informed ProofRank’s design."
   },
   {
     "id": "17-scale-b",
     "scene": "outro",
-    "text": "Better models mean fewer correction cycles for me. ProofRank applies the same principle to AI: incomplete evidence should stop it, not create more work through a confident mistake. I spend less energy translating intent—and have more freedom to turn ideas into working products."
+    "text": "Better models mean fewer correction cycles for me. Good automation should reduce correction work, not create more. ProofRank applies that principle to AI: when evidence is incomplete, the gate stops a confident mistake. I spend less energy translating intent—and have more freedom to turn ideas into products."
   }
 ]

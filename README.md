@@ -10,9 +10,11 @@
 
 ProofRank turns URL inventories, saved sitemaps, and saved HTML caches into a reproducible graph audit. It separates directly observed facts, cautious candidates, and conclusions that the available coverage cannot support.
 
-The result is not another generic SEO content generator. It is a safety layer for deciding what a team should investigate before touching a live site.
+The result is not another generic SEO content generator. ProofRank is a read-only safety layer for SEO and web operations teams: it separates confirmed findings from candidates and withholds site-wide conclusions when crawl coverage is incomplete, before anyone touches a live site.
 
-ProofRank grew from lessons in an earlier private workflow built with previous Codex models, and from a constraint its creator, Andrei Zakharov, lives every day: every click and correction has a physical cost. For years, he has built and grown online projects across marketing, SEO, and automation. Codex helps turn that experience and new ideas into working software with less physical effort and more creative freedom. That sharpened a universal product principle—automation should reduce unsupported work, not create more of it.
+The same evidence-gate pattern can protect other AI workflows that act on incomplete data.
+
+ProofRank grew from lessons in an earlier private workflow built with previous Codex models. Its creator, Andrei Zakharov, has over 13 years of experience building and growing online projects across marketing, SEO, and automation. He is fully paralysed, so every click and correction has a physical cost. Codex helps him turn experience and new ideas into working software with less physical effort and more creative freedom. That sharpened a universal product principle: automation should reduce correction work, not create more.
 
 ## What it detects
 
@@ -113,11 +115,11 @@ The verification runs unit tests, generates the demo in a temporary folder, vali
 
 ## OpenAI Build Week 2026
 
-During the OpenAI Build Week submission period, GPT-5.6 helped generalize and package those earlier lessons as ProofRank. Using Ultra reasoning, GPT-5.6 helped implement and test the reproducible incomplete-coverage extension shown in the demo. The project shows how an agent can combine deterministic tools, explicit uncertainty, and a coherent user experience on a real operational problem.
+During the OpenAI Build Week submission period, Codex with GPT-5.6 helped generalize and package those earlier lessons as ProofRank. Andrei used GPT-5.6 at the Ultra reasoning level while implementing and testing the reproducible incomplete-coverage extension shown in the demo. Deterministic Python calculates the audit facts; Codex follows the Skill’s safe local workflow, explains the result, and helps run validation. The project shows how an agent can combine deterministic tools, explicit uncertainty, and a coherent user experience on a real operational problem.
 
-**Track:** Work and productivity.
+**Track:** Work & Productivity.
 
-The public repository contains only synthetic demo data. The private real-world case study used a multilingual travel portal with more than 3,000 normalized URLs; private credentials, analytics exports, backups, and customer data are excluded.
+The public repository contains only synthetic demo data. An earlier private workflow processed 3,137 active pages returning HTTP 200 with 99.87% HTML coverage and informed ProofRank’s design. That private project is not part of this submission; credentials, analytics exports, backups, and customer data are excluded.
 
 See [BEFORE_AFTER.md](BEFORE_AFTER.md) for the boundary between prior domain-specific work and the Build Week extension.
 
