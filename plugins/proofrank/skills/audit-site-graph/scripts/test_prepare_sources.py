@@ -59,6 +59,7 @@ class PrepareSourcesTests(unittest.TestCase):
             self.assertTrue(manifest["universe_complete"])
             self.assertEqual(manifest["normalized_unique_urls"], 2)
             self.assertEqual(manifest["expected_normalized_identities"], 2)
+            self.assertEqual(manifest["expected_count_origin"], "AUTO_DERIVED_FROM_PREPARED_UNION")
             self.assertEqual({item["id"] for item in manifest["sources"]}, {"gsc-1", "wordpress-1", "crawler-1"})
             self.assertNotIn("client-secret-name", "|".join(item["id"] for item in manifest["sources"]))
             with (out / "inventory.csv").open("r", encoding="utf-8-sig", newline="") as handle:

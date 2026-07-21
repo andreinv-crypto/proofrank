@@ -829,6 +829,7 @@ def main(argv=None) -> int:
         "universe_complete": universe_complete,
         "normalized_unique_urls": len(records),
         "expected_normalized_identities": len(records),
+        "expected_count_origin": "AUTO_DERIVED_FROM_PREPARED_UNION",
         "sources": manifest_sources,
         "outputs": output_manifest,
         "selection_semantics": semantics,
@@ -844,6 +845,7 @@ def main(argv=None) -> int:
         "source_count": len(manifest_sources),
         "required_source_count": len(required_entries),
         "normalized_unique_urls": len(records),
+        "expected_count_origin": "AUTO_DERIVED_FROM_PREPARED_UNION",
         "page_cache_records": len(page_cache),
         "html_records": sum(1 for row in page_cache.values() if row.get("html")),
         "complete_html_records": sum(1 for row in page_cache.values() if row.get("html_complete") is True),
@@ -851,7 +853,11 @@ def main(argv=None) -> int:
         "sources": manifest_sources,
         "outputs": output_manifest,
         "selection_semantics": semantics,
-        "boundary": "Saved-file import only. No OAuth, live API, crawler control, CMS login, or production write was performed.",
+        "boundary": (
+            "Saved-file import only. The expected count is auto-derived from the prepared union, so "
+            "completeness applies only to the operator-declared source scope. No OAuth, live API, "
+            "crawler control, CMS login, or production write was performed."
+        ),
     }
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({

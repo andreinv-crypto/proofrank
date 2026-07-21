@@ -625,7 +625,13 @@ class SiteGraphAuditTests(unittest.TestCase):
             self.assertEqual(decision["decision"], "WITHHOLD")
             self.assertFalse(decision["release_gate_passed"])
             self.assertFalse(decision["live_change_authorized"])
+            self.assertEqual(decision["scope_assurance"], "DECLARED_SCOPE_INCOMPLETE")
+            self.assertIn("operator-declared source scope", decision["scope_warning"])
             self.assertFalse(decision["stages"]["source_universe"]["passed"])
+            self.assertEqual(
+                decision["stages"]["source_universe"]["expected_count_origin"],
+                "SYNTHETIC_CONTROL_FIXTURE",
+            )
             self.assertTrue(decision["stages"]["active_html"]["passed"])
             self.assertEqual(decision["stages"]["active_html"]["eligible_identities"], 7)
             self.assertEqual(decision["stages"]["active_html"]["full_html_identities"], 7)
@@ -676,6 +682,8 @@ class SiteGraphAuditTests(unittest.TestCase):
             self.assertEqual(decision["decision"], "READY_FOR_HUMAN_REVIEW")
             self.assertTrue(decision["release_gate_passed"])
             self.assertFalse(decision["live_change_authorized"])
+            self.assertEqual(decision["scope_assurance"], "DECLARED_SCOPE_BOUND")
+            self.assertEqual(audit["scope_assurance"], "DECLARED_SCOPE_BOUND")
             self.assertEqual(decision["stages"]["active_html"]["confirmed_terminal_identities"], 1)
             self.assertEqual(decision["unclassified_count"], 0)
             self.assertEqual(decision["blocker_codes"], [])

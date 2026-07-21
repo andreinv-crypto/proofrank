@@ -55,8 +55,19 @@ async function recordDashboard(browser, dashboard, destination, scenario) {
     await page.goto(pathToFileURL(dashboard).href, { waitUntil: "load" });
     await page.waitForSelector("#releaseDecision");
     await page.waitForSelector("#metrics .card");
-    const sourceMetric = page.locator("#metrics .card").filter({ hasText: "Source identities" });
-    const htmlMetric = page.locator("#metrics .card").filter({ hasText: "Active HTML" });
+    await page.evaluate(() => {
+      const label = document.createElement("div");
+      label.textContent = "SMALL SYNTHETIC EXAMPLE · PUBLIC FIXTURE";
+      label.style.cssText = [
+        "position:fixed", "z-index:9999", "top:18px", "left:50%", "transform:translateX(-50%)",
+        "padding:10px 18px", "border-radius:999px", "background:#10243b", "color:#ffc66c",
+        "border:1px solid rgba(255,198,108,.48)", "font:800 14px Segoe UI,Arial,sans-serif",
+        "letter-spacing:.08em", "box-shadow:0 12px 35px rgba(0,0,0,.3)"
+      ].join(";");
+      document.body.appendChild(label);
+    });
+    const sourceMetric = page.locator("#metrics .card").filter({ hasText: "Declared-scope identities" });
+    const htmlMetric = page.locator("#metrics .card").filter({ hasText: "Usable active HTML" });
     const releaseCard = page.locator("#boundaryCard");
     const decision = (await page.locator("#releaseDecision").innerText()).trim();
     const sourceText = (await sourceMetric.innerText()).replace(/\s+/g, " ");
@@ -132,7 +143,7 @@ async function main() {
   ].filter(Boolean);
   const executablePath = candidates.find(candidate => fs.existsSync(candidate));
   const browser = await chromium.launch({ headless: true, executablePath });
-  const slides = ["hook", "founder", "codex", "proof", "rollback", "torrevieja", "impact", "architecture", "outro"];
+  const slides = ["hook", "product", "founder", "codex", "proof", "rollback", "impact", "architecture", "outro"];
 
   try {
     for (const scene of slides) {

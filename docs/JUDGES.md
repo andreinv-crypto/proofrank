@@ -6,22 +6,22 @@ ProofRank can be evaluated without rebuilding it, creating an account, or provid
 
 1. Open the live [false-green demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html).
 2. In the owner/release view confirm:
-   - **source identities:** `7/11` — failed;
+   - **declared-scope identities:** `7/11` — failed;
    - **unclassified:** `4`;
-   - **active HTML:** `7/7` — passed;
+   - **usable active HTML:** `7/7` — passed;
    - **decision:** `WITHHOLD`;
    - **live change authorized:** `false`.
-3. Confirm that whole-site orphan, unreachable-page, click-depth, and link-opportunity claims are not promoted. The HTML subset is 100% complete, but the known source universe is not.
+3. Confirm that whole-site orphan, unreachable-page, click-depth, and link-opportunity claims are not promoted. The HTML subset is 100% complete, but the declared starting scope is not.
 4. Open the live [complete demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html).
 5. Confirm:
-   - **source identities:** `11/11` — passed;
+   - **declared-scope identities:** `11/11` — passed;
    - **confirmed terminal identity:** `1` known 404;
-   - **active HTML:** `10/10` — passed;
+   - **usable active HTML:** `10/10` — passed;
    - **decision:** `READY_FOR_HUMAN_REVIEW`;
    - **live change authorized:** `false`.
 6. Open **Evidence**, filter to high priority, and inspect a finding’s status and sources. Open **Method** to inspect the two-stage boundary.
 
-Both dashboards are self-contained synthetic artifacts. They load no external script, make no live-site write, and require no private data.
+Both dashboards are self-contained synthetic artifacts. The 11-identity fixture is intentionally small so the safety logic is easy to verify; it is not a scale benchmark. The dashboards load no external script, make no live-site write, and require no private data.
 
 ## Why this comparison matters
 
@@ -54,7 +54,7 @@ Each directory contains:
 
 Expected `decision.json` values:
 
-| Scenario | Source stage | Active HTML stage | Final decision | Unclassified | Live change |
+| Scenario | Declared-scope stage | Usable active HTML stage | Final decision | Unclassified | Live change |
 | --- | --- | --- | --- | ---: | --- |
 | False green | `7/11`, fail | `7/7`, pass | `WITHHOLD` | 4 | never authorized |
 | Complete | `11/11`, pass | `10/10`, pass; one confirmed 404 | `READY_FOR_HUMAN_REVIEW` | 0 | never authorized |
@@ -105,7 +105,7 @@ python plugins/proofrank/skills/audit-site-graph/scripts/site_graph_audit.py \
 
 The final gate passes only when:
 
-1. the source universe is explicitly declared complete, all required sources are collected, the audited origin matches, exact SHA-256 bindings match the supplied inventory/cache/resolved sitemaps, and any declared `expected_normalized_identities` count matches the observed union; and
+1. the declared starting scope is explicitly attested complete, all required sources are collected, the audited origin matches, exact SHA-256 bindings match the supplied inventory/cache/resolved sitemaps, and any declared `expected_normalized_identities` count matches the observed union; and
 2. explicitly attested, conflict-free, non-truncated, same-identity 2xx full HTML covers 100% of active graph-eligible identities, the homepage is parsed, and every sitemap child resolves.
 
 Confirmed 404/410 identities and resolved same-origin redirects with distinct destinations are reported and removed from the active denominator. Unresolved redirects, cross-origin finals, server errors, unusable 2xx records, new page-like identities, and count mismatches remain blockers.
@@ -121,10 +121,12 @@ Install **ProofRank**, start a new task, and invoke `$audit-site-graph`. The bun
 
 ## Evidence boundary
 
-Sanitized private evidence explains the product’s origin but is not public ProofRank output:
+Sanitized private evidence explains the product’s origin and operational context but is not public ProofRank output:
 
 - TorreviejaTour: 3,598 migration paths checked; zero of 3,090 previously successful paths lost.
 - Velas Purpuras / Alye Parusa: the source union expanded from an apparently complete 1,807-row gate to 11,172 normalized identities; `5,376/5,376` active canonical pages had usable HTML, yet source/frontier evidence remained incomplete, so graph claims were withheld.
 - A separate private deployment workflow caught a cache-path defect, rolled back three touched files, and later passed `442/442` pages with zero invalid emissions. Public ProofRank did not apply or roll back those changes.
+
+Across the two separate private scopes, `8,513` usable HTML pages were analyzed (`3,137 + 5,376`). This is a derived context figure, not one combined unique-URL universe. The `11,172` URL identities and `3,598` migration paths are different measures and must not be added together.
 
 See [REAL_WORLD_EVIDENCE.md](REAL_WORLD_EVIDENCE.md) and `validation/real_world_evidence.json` for exact aggregates, artifact hashes, and exclusions. Real dashboards can contain URLs, titles, H1s, and findings; only the bundled synthetic dashboards are publication-safe by default.

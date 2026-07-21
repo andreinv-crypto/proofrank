@@ -20,7 +20,7 @@ Use the bundled deterministic scripts. Prefer saved inputs. Never convert incomp
 
 ## Explain the value
 
-Start with the owner’s decision, not the graph vocabulary: ProofRank is a technical inspection before an old website is redesigned, moved, or cleaned up. Explain whether the evidence is sufficient to begin human review and what is still missing. Then give the technical SEO team the exact stages, counts, blockers, hashes, and next evidence step.
+Start with the owner’s decision, not the graph vocabulary: ProofRank is a technical inspection before an old website is redesigned, moved, or cleaned up. Explain whether the evidence is sufficient to begin human review and what is still missing. Say explicitly that completeness applies to the operator-declared source scope, not an independently discovered universal list. Then give the technical SEO team the exact stages, denominators, counts, blockers, hashes, and next evidence step.
 
 ## Select inputs
 
@@ -144,17 +144,17 @@ Source preparation can write:
 
 - `inventory.csv`: normalized URL/metric evidence and merged source IDs;
 - `page_cache.json`: conditional crawler status/final-URL records plus any supplied rendered HTML;
-- `source_manifest.json`: source statuses, expected normalized identity count, basenames, hashes, declaration, and output bindings;
+- `source_manifest.json`: source statuses, expected normalized identity count and its origin, basenames, hashes, declaration, and output bindings;
 - `prepare_report.json`: offline boundary and source/output summary.
 
 The audit writes:
 
 - `audit.json`: provenance, coverage, findings, pages, and links.
-- `decision.json`: compact Guarded Release Contract with stage results, blocker codes, unclassified count, evidence hashes, and the read-only authorization boundary.
+- `decision.json`: compact Guarded Release Contract with stage results, scope assurance and warning, expected-count origin, blocker codes, unclassified count, evidence hashes, and the read-only authorization boundary.
 - `pages.csv`: normalized page-level evidence.
 - `links.csv`: observed internal links.
 - `findings.csv`: sortable findings with status and evidence.
 - `report.md`: concise evidence report.
 - `dashboard.html`: local interactive viewer generated separately.
 
-Lead with an owner-readable release decision, then source-universe limitations, then active-HTML limitations, and finally the smallest safe next step. Cannibalization and URL-action findings remain human-review candidates even when both gates pass. Never fill missing evidence with assumptions. Never attribute a separate private deployment apply or rollback to ProofRank.
+Lead with an owner-readable release decision, then declared-source-scope limitations, then active-HTML limitations, and finally the smallest safe next step. Label source identities as observed / expected and active HTML as usable / graph-eligible. Cannibalization and URL-action findings remain human-review candidates even when both gates pass. Never fill missing evidence with assumptions. Never attribute a separate private deployment apply or rollback to ProofRank.

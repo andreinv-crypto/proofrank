@@ -31,7 +31,7 @@ Only filenames—not absolute source paths—are written to the manifest; source
 
 ## Source-universe declaration
 
-`--declare-source-universe-complete` is an explicit assertion about the selected scope. It is required for `universe_complete=true`; at least one required entry must exist, and every required entry must have status `collected`. A supplied file with zero accepted same-site URLs has status `empty` and cannot satisfy the gate. Without `--require`, every supplied or declared entry is required by default. The prepared manifest records the size of the reconciled scoped union as `expected_normalized_identities`; it must be a non-negative integer.
+`--declare-source-universe-complete` is an explicit operator assertion about the selected scope. It is required for `universe_complete=true`; at least one required entry must exist, and every required entry must have status `collected`. A supplied file with zero accepted same-site URLs has status `empty` and cannot satisfy the gate. Without `--require`, every supplied or declared entry is required by default. The prepared manifest records the size of the reconciled scoped union as `expected_normalized_identities`; it must be a non-negative integer. It also writes `expected_count_origin=AUTO_DERIVED_FROM_PREPARED_UNION`, making clear that this count is not an independent census of the site.
 
 Represent known gaps instead of silently omitting them:
 
@@ -40,7 +40,7 @@ Represent known gaps instead of silently omitting them:
 --not-attempted "wordpress=CMS export was not requested"
 ```
 
-An unavailable, not-attempted, invalid-shape, or empty required source keeps `source_universe_complete=false`. During the audit, the manifest must also match the audited absolute HTTP(S) origin. Its expected normalized identity count must equal the observed normalized union; any shortfall is reported as `unclassified_count` and blocks the source gate. Its inventory hash set must exactly match all supplied `--inventory` files; its optional page-cache hash must match the supplied `--page-cache`; and its sitemap hash set must exactly match every body resolved from the supplied sitemap/index chain. A required collected sitemap source cannot pass without nonempty declared sitemap hashes. This binds the declaration to the actual audit inputs instead of accepting a related-looking manifest. Source-universe completeness remains separate from HTML coverage: a perfectly parsed crawl cannot prove that an undeclared CMS, analytics property, sitemap layer, or historical source contains no additional URLs.
+An unavailable, not-attempted, invalid-shape, or empty required source keeps `source_universe_complete=false`. During the audit, the manifest must also match the audited absolute HTTP(S) origin. Its expected normalized identity count must equal the observed normalized union; any shortfall is reported as `unclassified_count` and blocks the source gate. Its inventory hash set must exactly match all supplied `--inventory` files; its optional page-cache hash must match the supplied `--page-cache`; and its sitemap hash set must exactly match every body resolved from the supplied sitemap/index chain. A required collected sitemap source cannot pass without nonempty declared sitemap hashes. This binds the declaration to the actual audit inputs instead of accepting a related-looking manifest. `DECLARED_SCOPE_BOUND` remains separate from HTML coverage and is not an independent completeness oracle: a perfectly parsed crawl cannot prove that an undeclared CMS, analytics property, sitemap layer, or historical source contains no additional URLs.
 
 ## Recognized GSC exports
 
@@ -152,7 +152,7 @@ Passing either gate alone is insufficient. In the bundled false-green fixture, s
 
 ## Decision contract
 
-Every audit writes `decision.json` and embeds the same object at `audit.release_contract`. The contract records `WITHHOLD` or `READY_FOR_HUMAN_REVIEW`, all gate stages, `unclassified_count`, stable blocker codes, evidence hashes, and `live_change_authorized=false`.
+Every audit writes `decision.json` and embeds the same object at `audit.release_contract`. The contract records `WITHHOLD` or `READY_FOR_HUMAN_REVIEW`, all gate stages, `unclassified_count`, stable blocker codes, evidence hashes, `scope_assurance`, `scope_warning`, `expected_count_origin`, and `live_change_authorized=false`.
 
 When `--gate-exit-code` is present, exit `2` means the read-only gate withheld and exit `0` means ready for human review. Input/runtime failures remain errors. The contract and exit code do not authorize, apply, or roll back a live change. Any private apply/rollback evidence referenced in project case studies belongs to a separate private deployment workflow, not public ProofRank.
 

@@ -4,9 +4,9 @@
 
 [![Verify ProofRank](https://github.com/andreinv-crypto/proofrank/actions/workflows/verify.yml/badge.svg)](https://github.com/andreinv-crypto/proofrank/actions/workflows/verify.yml)
 
-**A technical inspection before an old website is redesigned, moved, or cleaned up.**
+**Stop incomplete SEO evidence from becoming a confident migration plan.**
 
-[Open the complete interactive demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html) · [Open the incomplete-coverage demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html) · [Watch the 2:41 demo video](https://youtu.be/x3pWJJJjKM8)
+[Open the complete interactive demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html) · [Open the incomplete-coverage demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html) · [Watch the competition video](https://youtu.be/6vRI1otiv28)
 
 ![ProofRank evidence-first dashboard](plugins/proofrank/assets/screenshot-dashboard.png)
 
@@ -22,7 +22,7 @@ ProofRank grew from lessons in an earlier private workflow built with previous C
 
 ## What it detects
 
-- whether the declared source universe is complete enough to support a whole-site claim;
+- whether the declared starting scope is complete enough to support a whole-site claim;
 - crawl and sitemap coverage;
 - internal links and click depth;
 - orphan and unreachable-page candidates;
@@ -56,6 +56,17 @@ ProofRank combines four layers:
 
 No API key or third-party Python package is required. The adapters read already-exported CSV or JSON files; they do not perform OAuth or call live Google, CMS, or crawler APIs.
 
+### Scope assurance and the two denominators
+
+ProofRank verifies a **declared source scope**, not an unknowable universal list of every URL that might ever have existed. `scope_assurance` distinguishes `NOT_DECLARED`, `DECLARED_SCOPE_INCOMPLETE`, and `DECLARED_SCOPE_BOUND`. Even the bound state means that the operator declaration, required source rows, audited origin, counts, and evidence hashes agree; it is not independent proof that no source was omitted.
+
+`expected_count_origin` makes the count basis explicit. Normal `prepare_sources.py` output uses `AUTO_DERIVED_FROM_PREPARED_UNION`; the bundled teaching fixture uses `SYNTHETIC_CONTROL_FIXTURE`; older or hand-authored manifests fall back to `MANIFEST_DECLARED` or `NOT_PROVIDED`.
+
+Keep the two fractions separate:
+
+- **Declared-scope identities:** observed normalized identities / expected identities in the declared scope.
+- **Usable active HTML:** usable full-HTML identities / active graph-eligible identities after confirmed terminal 404/410 and distinct same-origin redirects are classified separately.
+
 ## Run the synthetic demo
 
 From the repository root:
@@ -80,10 +91,10 @@ python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py --scenario 
 
 Open `plugins/proofrank/demo-output/incomplete/dashboard.html` first, then `plugins/proofrank/demo-output/complete/dashboard.html`.
 
-- **False-green input:** the supplied seven-page view has usable HTML for every observed active page (`7/7`, 100%), but the manifest expects 11 normalized identities. ProofRank reports source `7/11`, `unclassified_count=4`, and `WITHHOLD`.
-- **Complete input:** source identities reach `11/11`; one confirmed 404 is classified outside the active denominator; all `10/10` active pages have usable HTML; ProofRank reports `READY_FOR_HUMAN_REVIEW`.
+- **False-green input:** the small synthetic control fixture expects 11 identities, but the supplied view contains seven. Declared-scope identities are `7/11`; usable active HTML is independently `7/7` (100%). Four identities remain unclassified, so ProofRank returns `WITHHOLD`.
+- **Complete input:** declared-scope identities reach `11/11`; one confirmed 404 is classified outside the active denominator; usable active HTML is `10/10`; ProofRank reports `READY_FOR_HUMAN_REVIEW`.
 
-Each output contains `audit.json`, `decision.json`, CSV evidence, a Markdown report, and a self-contained dashboard. This proves that observed-HTML completeness cannot override an incomplete source universe.
+Each output contains `audit.json`, `decision.json`, CSV evidence, a Markdown report, and a self-contained dashboard. This proves the gate behavior: complete HTML for an observed subset cannot override an incomplete declared source scope. The eleven-page fixture is a logic demonstration, not a scale benchmark or autonomous missing-URL discovery claim.
 
 ## Prepare common read-only exports
 
@@ -123,7 +134,7 @@ python plugins/proofrank/skills/audit-site-graph/scripts/render_dashboard.py \
   --output "out/dashboard.html"
 ```
 
-Whole-site graph claims pass a two-stage gate. First, the source universe must be explicitly declared complete, contain at least one required collected source, match the audited origin, and exactly bind the supplied inventory, HTML cache, and every resolved sitemap body by SHA-256. Second, explicitly attested full HTML must cover 100% of active graph-eligible URLs, include the homepage, and resolve every supplied sitemap child. HTML is usable only when it is present, marked `html_complete=true`, non-truncated, conflict-free, 2xx, and the final URL is the same identity on the audited origin. A confirmed 404/410 or same-origin redirect with a distinct destination is reported and removed from the active-page denominator; unresolved redirects, cross-origin finals, server errors, and unusable 2xx responses remain and block completeness. Any new page-like identity discovered in links, canonicals, or redirect destinations contradicts the declared universe and also blocks the gate. The topology threshold cannot be lowered: one unseen active page could disprove an orphan claim. If the source manifest is missing or either stage fails, orphan, click-depth, unreachable-page, and link-opportunity conclusions are withheld.
+Whole-site graph claims pass a two-stage gate. First, the declared source scope must be explicitly marked complete, contain at least one required collected source, match the audited origin, and exactly bind the supplied inventory, HTML cache, and every resolved sitemap body by SHA-256. This is `DECLARED_SCOPE_BOUND`, not independent proof that every possible source was supplied. Second, explicitly attested full HTML must cover 100% of active graph-eligible URLs, include the homepage, and resolve every supplied sitemap child. HTML is usable only when it is present, marked `html_complete=true`, non-truncated, conflict-free, 2xx, and the final URL is the same identity on the audited origin. A confirmed 404/410 or same-origin redirect with a distinct destination is reported and removed from the active-page denominator; unresolved redirects, cross-origin finals, server errors, and unusable 2xx responses remain and block completeness. Any new page-like identity discovered in links, canonicals, or redirect destinations contradicts the declared scope and also blocks the gate. The topology threshold cannot be lowered: one unseen active page could disprove an orphan claim. If the source manifest is missing or either stage fails, orphan, click-depth, unreachable-page, and link-opportunity conclusions are withheld.
 
 When the manifest includes `expected_normalized_identities`, ProofRank also verifies the observed identity count and reports any remainder as unclassified. Evidence weight may prioritize deeper review, but it never silently removes a low-weight identity from the completeness denominator.
 
@@ -174,21 +185,21 @@ The verification runs unit and adapter tests, including a 10,000-row no-truncati
 
 ## OpenAI Build Week 2026
 
-During the OpenAI Build Week submission period, Codex with GPT-5.6 helped generalize and package earlier private lessons as ProofRank. Andrei used GPT-5.6 at the Ultra reasoning level to challenge the first design against sanitized migration evidence. That reasoning exposed the central false-completeness flaw: 100% of observed HTML can still hide an incomplete source universe. Codex then helped implement the separate identity-count gate, offline adapters, terminal-URL semantics, strict 100% tests, Guarded Release Contract, false-green demo, dashboard, and repository verification. Deterministic Python calculates the audit facts; Codex follows the Skill, explains the evidence, and never manufactures permission for a live change.
+During the OpenAI Build Week submission period, Codex with GPT-5.6 helped generalize and package earlier private lessons as ProofRank. Andrei used GPT-5.6 at the Ultra reasoning level to challenge the first design against sanitized migration evidence. That reasoning exposed the central false-completeness flaw: 100% of observed HTML can still hide an incomplete declared starting scope. Codex then helped implement the separate identity-count gate, offline adapters, terminal-URL semantics, strict 100% tests, Guarded Release Contract, false-green demo, dashboard, and repository verification. Deterministic Python calculates the audit facts; Codex follows the Skill, explains the evidence, and never manufactures permission for a live change.
 
 **Track:** Work & Productivity.
 
 The runnable public fixtures are synthetic. Sanitized Torrevieja evidence documents 3,598 migration paths checked with zero of 3,090 previously successful paths lost. Separate seven-language Velas evidence shows an apparently complete 1,807-row gate expanding to 11,172 normalized identities; even after all 5,376 active canonical pages had usable HTML, the whole-site graph remained withheld because source/frontier evidence was incomplete. A private guarded apply later failed at 19/442 language pages and automatically restored all three changed files; after the cache-path fix it passed 442/442 with zero invalid alternate emissions. These workflows informed the public safety model but are not public ProofRank outputs. See [REAL_WORLD_EVIDENCE.md](docs/REAL_WORLD_EVIDENCE.md) for exact scope, hashes, and boundary.
 
-### Modeled analyst time, not a guarantee
+### Operational impact, not a measured-hours claim
 
-No controlled benchmark exists yet. With exports and crawl data already available, the planning model estimates roughly 5–10 hours of mechanical reconciliation and evidence-packaging saved on a 2,000–5,000 identity project, and 9–21 hours on an 8,000–15,000 identity project. Access collection, live crawling, expert decisions, implementation, and monitoring are excluded. See the evidence document for assumptions and the planned benchmark method.
+No controlled time benchmark exists yet, so ProofRank does not claim a measured number of hours saved. The demonstrated automation covers export joining, URL normalization, deduplication, provenance preservation, coverage checking, and evidence packaging. Access collection, live crawling, expert decisions, implementation, and monitoring remain outside that claim.
 
 For the judging criteria, the technical implementation is deterministic and tested; the impact is fewer unsafe corrections before live SEO work; the novelty is a two-stage evidence contract that can refuse unsupported claims; and reproducibility comes from synthetic fixtures, local artifacts, one-command verification, and zero required credentials. Human review is intentional: cannibalization and URL-action candidates are decision support, not automatic diagnoses or production changes.
 
 See [BEFORE_AFTER.md](BEFORE_AFTER.md) for the boundary between prior domain-specific work and the Build Week extension.
 
-Submission materials: [Devpost draft](docs/DEVPOST_SUBMISSION.md) · [Build Week log](BUILD_LOG.md) · [public demo video](https://youtu.be/x3pWJJJjKM8) · [under-three-minute demo script](docs/DEMO_SCRIPT.md) · [judge testing guide](docs/JUDGES.md).
+Submission materials: [Devpost submission](docs/DEVPOST_SUBMISSION.md) · [Build Week log](BUILD_LOG.md) · [competition video](https://youtu.be/6vRI1otiv28) · [under-three-minute demo script](docs/DEMO_SCRIPT.md) · [judge testing guide](docs/JUDGES.md).
 
 ## License
 

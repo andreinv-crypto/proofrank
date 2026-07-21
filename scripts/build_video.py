@@ -50,20 +50,45 @@ def split_cues(text: str) -> list[str]:
     sentences = [item.strip() for item in re.split(r"(?<=[.!?])\s+", text.strip()) if item.strip()]
     cues: list[str] = []
     for sentence in sentences:
-        if len(sentence) <= 105:
-            cues.append(sentence)
-            continue
-        parts = [item.strip() for item in re.split(r"(?<=[,:;—])\s+", sentence) if item.strip()]
-        buffer = ""
-        for part in parts:
-            candidate = f"{buffer} {part}".strip()
-            if buffer and len(candidate) > 105:
-                cues.append(buffer)
-                buffer = part
-            else:
-                buffer = candidate
-        if buffer:
-            cues.append(buffer)
+        words = [
+            piece
+            for word in sentence.split()
+            for piece in (
+                [word]
+                if len(word) <= 78
+                else [word[index:index + 78] for index in range(0, len(word), 78)]
+            )
+        ]
+        group_count = min(len(words), max(1, (len(sentence) + 77) // 78))
+        while group_count <= len(words):
+            chunks: list[str] = []
+            cursor = 0
+            for group_index in range(group_count):
+                groups_left = group_count - group_index
+                if groups_left == 1:
+                    chunks.append(" ".join(words[cursor:]))
+                    break
+                remaining = words[cursor:]
+                target = (sum(len(word) for word in remaining) + len(remaining) - 1) / groups_left
+                max_end = len(words) - (groups_left - 1)
+                best_end = cursor + 1
+                best_delta = float("inf")
+                for end in range(cursor + 1, max_end + 1):
+                    candidate = " ".join(words[cursor:end])
+                    if len(candidate) > 78 and end > cursor + 1:
+                        break
+                    delta = abs(len(candidate) - target)
+                    if delta < best_delta:
+                        best_end = end
+                        best_delta = delta
+                chunks.append(" ".join(words[cursor:best_end]))
+                cursor = best_end
+            if all(len(chunk) <= 78 for chunk in chunks):
+                cues.extend(chunks)
+                break
+            group_count += 1
+        else:
+            cues.extend(words)
     return cues or [text.strip()]
 
 
@@ -179,7 +204,7 @@ def main() -> int:
                 cue_end = current + allocated
             wrapped = "\n".join(textwrap.wrap(
                 cue,
-                width=54,
+                width=42,
                 break_long_words=False,
                 break_on_hyphens=False,
             ))
@@ -228,9 +253,9 @@ def main() -> int:
     ])
 
     subtitle_filter = (
-        "subtitles=narration.srt:force_style='FontName=Segoe UI,FontSize=13,"
-        "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,"
-        "Outline=1,Shadow=0,Alignment=2,MarginV=22'"
+        "subtitles=narration.srt:force_style='FontName=Segoe UI,FontSize=10,"
+        "PrimaryColour=&H00FFFFFF,OutlineColour=&H80000000,BackColour=&H80000000,"
+        "BorderStyle=3,Outline=2,Shadow=0,Alignment=2,MarginV=20'"
     )
     mux_command = [
         str(args.ffmpeg), "-y", "-loglevel", "error", "-i", str(visuals), "-i", str(narration),

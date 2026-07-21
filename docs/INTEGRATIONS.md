@@ -65,7 +65,7 @@ python plugins/proofrank/skills/audit-site-graph/scripts/prepare_sources.py \
 
 Because required WordPress evidence is unavailable, `universe_complete` remains false even though the GSC file parsed successfully. `--not-attempted KIND=REASON` records a known source that has not yet been checked.
 
-Invalid-shape and zero-accepted sources are recorded as `invalid` or `empty` and also block the gate when required. `expected_normalized_identities` must be a non-negative integer when present. At audit time, its exact equality with the observed normalized union is part of the source gate; any remainder is reported as `unclassified_count` rather than removed by evidence weighting.
+Invalid-shape and zero-accepted sources are recorded as `invalid` or `empty` and also block the gate when required. `expected_normalized_identities` must be a non-negative integer when present. At audit time, its exact equality with the observed normalized union is part of the source gate; any remainder is reported as `unclassified_count` rather than removed by evidence weighting. `prepare_sources.py` labels this basis as `expected_count_origin=AUTO_DERIVED_FROM_PREPARED_UNION`; it is a consistency count for the operator-declared scope, not an independent estimate of every URL that may exist.
 
 ## Run the two-stage audit
 
@@ -87,12 +87,12 @@ python plugins/proofrank/skills/audit-site-graph/scripts/render_dashboard.py \
 
 ProofRank evaluates two independent stages:
 
-1. **Source-universe gate:** an explicit complete declaration, at least one required source, every required source collected, an absolute manifest origin equal to the audited origin, and exact SHA-256 multisets for every supplied inventory, the optional supplied HTML cache, and every recursively resolved sitemap body.
+1. **Declared-source-scope gate:** an explicit complete declaration, at least one required source, every required source collected, an absolute manifest origin equal to the audited origin, and exact SHA-256 multisets for every supplied inventory, the optional supplied HTML cache, and every recursively resolved sitemap body.
 2. **Observed-content gate:** explicitly attested, conflict-free full HTML covers 100% of active graph-eligible URLs, the homepage is parsed, and every supplied sitemap child resolves. HTML must also be non-truncated, 2xx, and retain the requested identity on the audited origin. Confirmed 404s/410s and same-origin redirects with distinct destinations leave the active denominator; unresolved redirects, cross-origin finals, server errors, unattested snippets, conflicting snapshots, and other unusable 2xx records remain and block completeness. New page-like identities exposed by links, canonicals, or redirects contradict the declared universe. `--complete-threshold` is fixed at `1.0` because an unseen active page could change orphan, reachability, or link-opportunity results.
 
-The final graph gate is the conjunction of both. When either fails, ProofRank emits withheld evidence and does not promote whole-site orphan, unreachable-page, click-depth, or internal-link-opportunity conclusions.
+The final graph gate is the conjunction of both. `DECLARED_SCOPE_BOUND` means the declaration and supplied evidence agree; it is not independent proof that the operator remembered every source. When either gate fails, ProofRank emits withheld evidence and does not promote whole-site orphan, unreachable-page, click-depth, or internal-link-opportunity conclusions.
 
-The false-green fixture shows why the count belongs in the first stage: source identities are only `7/11`, leaving four unclassified, even though full HTML covers every observed active identity (`7/7`). The active-HTML stage passes, but the final decision remains `WITHHOLD`. In the complete fixture, source identities are `11/11`; one confirmed 404 is outside the active denominator; full HTML is `10/10`; and the decision is `READY_FOR_HUMAN_REVIEW`.
+The false-green fixture shows why the count belongs in the first stage: declared-scope identities are only `7/11`, leaving four unclassified, even though usable full HTML covers every observed active identity (`7/7`). The active-HTML stage passes, but the final decision remains `WITHHOLD`. In the complete fixture, declared-scope identities are `11/11`; one confirmed 404 is outside the active denominator; usable full HTML is `10/10`; and the decision is `READY_FOR_HUMAN_REVIEW`.
 
 ## Consume the Guarded Release Contract
 
@@ -101,9 +101,12 @@ Every audit writes `decision.json` beside `audit.json`. The same object is also 
 - `decision`: `WITHHOLD` or `READY_FOR_HUMAN_REVIEW`;
 - `release_gate_passed`;
 - stage results for `source_universe`, `active_html`, and `final`;
+- `scope_assurance`, `scope_warning`, and `expected_count_origin`;
 - `unclassified_count` and stable `blocker_codes`;
 - hashes that bind the decision to the evaluated evidence;
 - `live_change_authorized=false` and the explicit read-only boundary.
+
+The displayed fractions have different denominators: declared-scope identities are **observed / expected**, while active HTML is **usable / graph-eligible** after confirmed terminal identities are classified separately. Never combine them into one percentage.
 
 By default the CLI can still generate a withheld report successfully. Add `--gate-exit-code` only when another read-only process needs deterministic control flow: exit `2` means `WITHHOLD`, and exit `0` means `READY_FOR_HUMAN_REVIEW`. Input and runtime failures remain normal errors. Neither exit code authorizes, applies, or rolls back a live change.
 

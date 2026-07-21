@@ -136,17 +136,9 @@ This sequence validates the need for an enforceable evidence decision. It does n
 
 For a new 5–20 page site the value is limited. ProofRank does not promise rankings, choose redirects automatically, or replace backlinks, Core Web Vitals, content strategy, or expert review.
 
-## Time-savings estimate: model, not benchmark
+## Operational impact, not a measured-hours claim
 
-No controlled benchmark has yet compared the same audits with and without ProofRank, so the repository does not claim a guaranteed number of hours saved. A defensible planning range, assuming exports and crawl data already exist, is:
-
-| Scope | Mature crawler + spreadsheet workflow | ProofRank-assisted operator | Modeled mechanical saving |
-| --- | ---: | ---: | ---: |
-| 300–800 identities, 3–4 sources | 4–8 h | 2–4 h | 2–4 h |
-| 2,000–5,000 identities, about 5 sources | 8–16 h | 3–7 h | 5–10 h |
-| 8,000–15,000 identities, 7–10 sources | 15–35 h | 6–14 h | 9–21 h |
-
-The modeled saving covers normalization, deduplication, provenance, coverage reconciliation, graph extraction, evidence packaging, and one rerun. It excludes access collection, live crawling, expert redirect/delete decisions, implementation, and monitoring. The next validation step is to add timestamps and compare 5–10 matched audits before promoting this estimate to a measured product claim.
+No controlled benchmark has yet compared the same audits with and without ProofRank, so the repository makes no quantified time-saving claim. The demonstrated automation covers normalization, deduplication, provenance, coverage reconciliation, graph extraction, evidence packaging, and repeatable reruns. It excludes access collection, live crawling, expert redirect/delete decisions, implementation, and monitoring. The next validation step is to add timestamps and compare matched audits before publishing a measured product claim.
 
 ## What carried into public ProofRank
 

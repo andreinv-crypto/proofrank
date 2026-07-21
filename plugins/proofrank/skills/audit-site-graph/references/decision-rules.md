@@ -10,10 +10,12 @@
 
 Return `READY_FOR_HUMAN_REVIEW` only when both stages pass:
 
-1. **Source universe:** the scope is explicitly declared, required sources are collected, origin and SHA-256 bindings match, `expected_normalized_identities` equals the observed normalized union, and no new page-like identity contradicts the declaration.
+1. **Declared source scope:** the scope is explicitly declared, required sources are collected, origin and SHA-256 bindings match, `expected_normalized_identities` equals the observed normalized union, and no new page-like identity contradicts the declaration.
 2. **Active HTML:** usable parsed HTML covers 100% of active graph-eligible URLs; the normalized homepage is parsed; and every supplied sitemap-index child is resolved. The topology threshold cannot be lowered because one unseen active page can change inbound-link and reachability conclusions.
 
 Return `WITHHOLD` when either stage fails. Report the expected/observed source counts, `unclassified_count`, blocker codes, and both stage results rather than collapsing them into one percentage. A `7/7` active-HTML pass cannot override a `7/11` source-universe failure.
+
+Always expose `scope_assurance` and `expected_count_origin`. `DECLARED_SCOPE_BOUND` is a consistency and provenance assurance for the operator-declared inputs, not independent proof that every site source or historical URL was supplied. Label the fractions explicitly: source scope is observed / expected; active HTML is usable / graph-eligible.
 
 When any condition fails:
 

@@ -33,6 +33,16 @@ HTML_COMPLETE_FIELDS = (
     "html_complete", "htmlComplete", "full_html", "fullHtml", "body_complete", "bodyComplete",
 )
 SOURCE_READY_STATUSES = {"collected", "complete", "included", "loaded", "resolved"}
+EXPECTED_COUNT_ORIGINS = {
+    "AUTO_DERIVED_FROM_PREPARED_UNION",
+    "SYNTHETIC_CONTROL_FIXTURE",
+    "MANIFEST_DECLARED",
+    "NOT_PROVIDED",
+}
+DECLARED_SCOPE_WARNING = (
+    "Completeness applies only to the operator-declared source scope and supplied evidence; "
+    "it is not independent proof that every site source or URL was supplied."
+)
 NON_PAGE_LINK_SUFFIXES = {
     ".7z", ".avi", ".css", ".doc", ".docx", ".eot", ".gif", ".gz", ".ico", ".jpeg", ".jpg",
     ".js", ".json", ".map", ".mov", ".mp3", ".mp4", ".mpeg", ".ogg", ".otf", ".pdf", ".png",
@@ -103,6 +113,21 @@ def boolish(value) -> bool:
     if isinstance(value, bool):
         return value
     return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def normalize_expected_count_origin(value, expected_normalized_identities) -> str:
+    if expected_normalized_identities is None:
+        return "NOT_PROVIDED"
+    normalized = str(value or "").strip().upper().replace("-", "_").replace(" ", "_")
+    return normalized if normalized in EXPECTED_COUNT_ORIGINS else "MANIFEST_DECLARED"
+
+
+def source_scope_assurance(source_universe: dict) -> str:
+    if not source_universe.get("declared"):
+        return "NOT_DECLARED"
+    if source_universe.get("source_universe_complete"):
+        return "DECLARED_SCOPE_BOUND"
+    return "DECLARED_SCOPE_INCOMPLETE"
 
 
 def first_value(row: dict, fields) -> str:
@@ -554,8 +579,11 @@ def empty_source_universe(observed_normalized_identities: int = 0) -> dict:
         "required_source_count": 0,
         "required_sources_incomplete": [],
         "expected_normalized_identities": None,
+        "expected_count_origin": "NOT_PROVIDED",
         "observed_normalized_identities": observed_normalized_identities,
         "identity_count_matches": None,
+        "scope_assurance": "NOT_DECLARED",
+        "scope_warning": DECLARED_SCOPE_WARNING,
         "gate_reasons": ["source manifest was not declared"],
         "sources": [],
     }
@@ -644,6 +672,9 @@ def load_source_manifest(
         None
         if expected_normalized_identities is None
         else observed_normalized_identities == expected_normalized_identities
+    )
+    expected_count_origin = normalize_expected_count_origin(
+        data.get("expected_count_origin"), expected_normalized_identities
     )
 
     manifest_site_raw = str(data.get("site") or "").strip()
@@ -742,7 +773,7 @@ def load_source_manifest(
             "observed normalized source identity count does not match expected_normalized_identities"
         )
     source_universe_complete = not gate_reasons
-    return {
+    result = {
         "declared": True,
         "path": str(manifest_path),
         "sha256": hashlib.sha256(body).hexdigest(),
@@ -759,11 +790,15 @@ def load_source_manifest(
         "required_source_count": required_source_count,
         "required_sources_incomplete": incomplete,
         "expected_normalized_identities": expected_normalized_identities,
+        "expected_count_origin": expected_count_origin,
         "observed_normalized_identities": observed_normalized_identities,
         "identity_count_matches": identity_count_matches,
+        "scope_warning": DECLARED_SCOPE_WARNING,
         "gate_reasons": gate_reasons,
         "sources": sources,
     }
+    result["scope_assurance"] = source_scope_assurance(result)
+    return result
 
 
 def read_bytes(source: str, allow_network: bool, site: str, local_parent: Path | None = None):
@@ -1378,6 +1413,10 @@ def build_release_contract(
     block("UNRESOLVED_SITEMAPS", bool(coverage["unresolved_sitemaps"]))
 
     expected = source_universe.get("expected_normalized_identities")
+    expected_count_origin = normalize_expected_count_origin(
+        source_universe.get("expected_count_origin"), expected
+    )
+    scope_assurance = source_scope_assurance(source_universe)
     classification_target = max(
         coverage["known_urls"],
         expected if isinstance(expected, int) else source_universe.get("observed_normalized_identities", 0),
@@ -1390,6 +1429,8 @@ def build_release_contract(
         "decision": "READY_FOR_HUMAN_REVIEW" if release_gate_passed else "WITHHOLD",
         "release_gate_passed": release_gate_passed,
         "live_change_authorized": False,
+        "scope_assurance": scope_assurance,
+        "scope_warning": DECLARED_SCOPE_WARNING,
         "stages": {
             "source_universe": {
                 "passed": bool(coverage["source_universe_complete"]),
@@ -1397,6 +1438,7 @@ def build_release_contract(
                     "observed_normalized_identities", 0
                 ),
                 "expected_normalized_identities": expected,
+                "expected_count_origin": expected_count_origin,
                 "identity_count_matches": source_universe.get("identity_count_matches"),
             },
             "active_html": {
@@ -1415,8 +1457,8 @@ def build_release_contract(
         "blocker_codes": blocker_codes,
         "evidence_hashes": evidence_hashes,
         "decision_boundary": (
-            "Read-only evidence result. READY_FOR_HUMAN_REVIEW does not authorize, apply, "
-            "or roll back any live change."
+            "Read-only evidence result. " + DECLARED_SCOPE_WARNING + " "
+            "READY_FOR_HUMAN_REVIEW does not authorize, apply, or roll back any live change."
         ),
     }
 
@@ -1451,12 +1493,14 @@ def build_report(audit: dict) -> str:
         f"| HTML coverage | {coverage['html_coverage']:.2%} |",
         f"| Unresolved child sitemaps | {coverage['unresolved_sitemaps']} |",
         f"| Homepage parsed | {'yes' if coverage['homepage_parsed'] else 'no'} |",
-        f"| Source universe explicitly declared | {'yes' if coverage['universe_declared_complete'] else 'no'} |",
+        f"| Declared source scope explicitly marked complete | {'yes' if coverage['universe_declared_complete'] else 'no'} |",
         f"| Manifest site matches audit | {'yes' if coverage['source_site_matches'] else 'no'} |",
         f"| Manifest inventory hash set bound | {'yes' if coverage['source_inventory_binding_complete'] else 'no'} |",
         f"| Supplied HTML-cache hash bound | {'yes' if coverage['source_page_cache_binding_complete'] else 'no'} |",
         f"| Resolved sitemap hash set bound | {'yes' if coverage['source_sitemap_binding_complete'] else 'no'} |",
-        f"| Source-universe gate passed | {'yes' if coverage['source_universe_complete'] else 'no'} |",
+        f"| Declared-source-scope gate passed | {'yes' if coverage['source_universe_complete'] else 'no'} |",
+        f"| Scope assurance | {audit['release_contract']['scope_assurance']} |",
+        f"| Expected-count origin | {audit['release_contract']['stages']['source_universe']['expected_count_origin']} |",
         f"| Observed-content coverage gate passed | {'yes' if coverage['content_graph_complete'] else 'no'} |",
         f"| Final whole-site graph gate passed | {'yes' if coverage['graph_complete'] else 'no'} |",
         "",
@@ -1480,6 +1524,8 @@ def build_report(audit: dict) -> str:
     lines += [
         "",
         "## Decision boundary",
+        "",
+        DECLARED_SCOPE_WARNING,
         "",
         "This report does not authorize CMS edits, redirects, deletion, consolidation, noindex, schema deployment, sitemap submission, or other live changes. Verify the page mechanism and current search evidence before URL actions.",
         "",
@@ -1754,6 +1800,8 @@ def main(argv=None):
         "page_cache": file_sha256(Path(args.page_cache)) if args.page_cache else None,
         "sitemaps": list(sitemap_data["hashes"]),
     }
+    source_universe["scope_assurance"] = source_scope_assurance(source_universe)
+    source_universe["scope_warning"] = DECLARED_SCOPE_WARNING
     release_contract = build_release_contract(source_universe, coverage, evidence_hashes)
     audit = {
         "generated_at": utc_now(),
@@ -1770,6 +1818,8 @@ def main(argv=None):
             "max_pages": args.max_pages,
         },
         "coverage": coverage,
+        "scope_assurance": release_contract["scope_assurance"],
+        "scope_warning": release_contract["scope_warning"],
         "release_contract": release_contract,
         "lane_counts": dict(lane_counts),
         "schema_type_counts": dict(schema_counts),
@@ -1777,7 +1827,11 @@ def main(argv=None):
         "findings": findings,
         "pages": page_rows,
         "links": links,
-        "decision_boundary": "No live changes are authorized by this audit. Confirm the CMS mechanism and any required finalized search-performance evidence before URL actions.",
+        "decision_boundary": (
+            DECLARED_SCOPE_WARNING
+            + " No live changes are authorized by this audit. Confirm the CMS mechanism and any "
+            "required finalized search-performance evidence before URL actions."
+        ),
     }
 
     with (output_dir / "audit.json").open("w", encoding="utf-8") as handle:

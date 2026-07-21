@@ -48,6 +48,7 @@ def write_fixture_source_manifest(
         "site": SITE,
         "universe_complete": True,
         "expected_normalized_identities": expected_normalized_identities,
+        "expected_count_origin": "SYNTHETIC_CONTROL_FIXTURE",
         "sources": [
             {
                 "id": "synthetic-inventory",

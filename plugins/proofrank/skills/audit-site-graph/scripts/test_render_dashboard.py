@@ -91,7 +91,7 @@ class DashboardCompletenessTests(unittest.TestCase):
             minimal_audit(source_universe=source_universe, content_complete=True, graph_complete=True)
         )
 
-        self.assertEqual(payload["completeness"]["source_label"], "Declared + bound")
+        self.assertEqual(payload["completeness"]["source_label"], "Declared scope bound")
         self.assertEqual(payload["completeness"]["content_label"], "Coverage passed")
         self.assertEqual(payload["completeness"]["final_label"], "Gate passed")
         self.assertTrue(payload["completeness"]["gate_passed"])
@@ -100,7 +100,9 @@ class DashboardCompletenessTests(unittest.TestCase):
         self.assertFalse(payload["release_contract"]["live_change_authorized"])
         self.assertEqual(payload["source_universe"]["sources"][0]["records"], 1240)
         self.assertEqual(payload["source_universe"]["sources"][1]["records"], 980)
-        self.assertIn("Source universe → observed content graph → final graph", html)
+        self.assertIn("Declared source scope → usable active HTML → final gate", html)
+        self.assertIn("observed / expected", html)
+        self.assertIn("usable / graph-eligible", html)
         self.assertIn("Owner / release view", html)
         self.assertIn("decision.json", html)
         self.assertNotIn(r"C:\Private", html)
@@ -128,10 +130,10 @@ class DashboardCompletenessTests(unittest.TestCase):
         )
 
         completeness = payload["completeness"]
-        self.assertEqual(completeness["source_label"], "Declaration failed")
+        self.assertEqual(completeness["source_label"], "Declared scope incomplete")
         self.assertEqual(completeness["content_label"], "Coverage passed")
         self.assertEqual(completeness["final_label"], "Withheld")
-        self.assertEqual(completeness["headline"], "Source universe incomplete")
+        self.assertEqual(completeness["headline"], "Declared source scope incomplete")
         self.assertIn("Whole-site graph claims are withheld", completeness["boundary"])
         self.assertFalse(completeness["gate_passed"])
         self.assertEqual(payload["release_contract"]["decision"], "WITHHOLD")
@@ -170,6 +172,7 @@ class DashboardCompletenessTests(unittest.TestCase):
 
         self.assertEqual(payload["source_universe"]["observed_normalized_identities"], 7)
         self.assertEqual(payload["source_universe"]["expected_normalized_identities"], 11)
+        self.assertEqual(payload["source_universe"]["scope_assurance"], "DECLARED_SCOPE_INCOMPLETE")
         self.assertEqual(payload["release_contract"]["unclassified_count"], 4)
         self.assertEqual(payload["release_contract"]["blocker_codes"], ["SOURCE_IDENTITY_COUNT_MISMATCH"])
         self.assertNotIn("evidence_hashes", payload["release_contract"])
@@ -185,7 +188,7 @@ class DashboardCompletenessTests(unittest.TestCase):
         self.assertEqual(completeness["content_label"], "Coverage passed")
         self.assertEqual(completeness["final_label"], "Legacy / not proven")
         self.assertEqual(completeness["headline"], "Legacy audit — manifest not declared")
-        self.assertIn("Whole-site completeness is not proven", completeness["boundary"])
+        self.assertIn("Whole-site graph completeness is not established", completeness["boundary"])
         self.assertFalse(completeness["gate_passed"])
 
 

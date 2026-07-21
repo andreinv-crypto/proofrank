@@ -146,13 +146,14 @@ def validate_public_dashboard(path: Path) -> None:
     assert not re.search(r"<script[^>]+src=", dashboard, re.IGNORECASE)
     assert not re.search(r"https?://[^\"']+\.(?:js|css)", dashboard, re.IGNORECASE)
     assert "Completeness gates" in dashboard
-    assert "Declared source universe" in dashboard
+    assert "Declared source scope" in dashboard
 
 
 def main() -> int:
     validate_manifest()
     validate_marketplace()
     validate_evidence_and_ci()
+    run([sys.executable, str(ROOT / "scripts" / "test_build_video.py")])
     run([sys.executable, str(SKILL / "scripts" / "test_prepare_sources.py")])
     run([sys.executable, str(SKILL / "scripts" / "test_site_graph_audit.py")])
     run([sys.executable, str(SKILL / "scripts" / "test_render_dashboard.py")])
@@ -181,10 +182,13 @@ def main() -> int:
         assert complete_decision["decision"] == "READY_FOR_HUMAN_REVIEW"
         assert complete_decision["release_gate_passed"] is True
         assert complete_decision["live_change_authorized"] is False
+        assert complete_decision["scope_assurance"] == "DECLARED_SCOPE_BOUND"
+        assert "operator-declared source scope" in complete_decision["scope_warning"]
         assert complete_decision["stages"]["source_universe"] == {
             "passed": True,
             "observed_normalized_identities": 11,
             "expected_normalized_identities": 11,
+            "expected_count_origin": "SYNTHETIC_CONTROL_FIXTURE",
             "identity_count_matches": True,
         }
         assert complete_decision["stages"]["active_html"]["eligible_identities"] == 10
@@ -205,10 +209,12 @@ def main() -> int:
         assert incomplete_decision["decision"] == "WITHHOLD"
         assert incomplete_decision["release_gate_passed"] is False
         assert incomplete_decision["live_change_authorized"] is False
+        assert incomplete_decision["scope_assurance"] == "DECLARED_SCOPE_INCOMPLETE"
         assert incomplete_decision["stages"]["source_universe"] == {
             "passed": False,
             "observed_normalized_identities": 7,
             "expected_normalized_identities": 11,
+            "expected_count_origin": "SYNTHETIC_CONTROL_FIXTURE",
             "identity_count_matches": False,
         }
         assert incomplete_decision["stages"]["active_html"]["eligible_identities"] == 7
@@ -235,6 +241,7 @@ def main() -> int:
             "marketplace",
             "evidence_boundary",
             "github_actions",
+            "video_caption_tests",
             "adapter_tests",
             "engine_tests",
             "dashboard_tests",
