@@ -1,0 +1,269 @@
+{
+  "schema_version": 2,
+  "evidence_type": "sanitized_aggregate_operational_validation",
+  "provenance": {
+    "publicly_recomputable": false,
+    "reason": "raw URLs, analytics exports, credentials, backups, and private operational repositories are intentionally excluded",
+    "private_report_hashes": [
+      {
+        "case": "torrevieja",
+        "artifact": "TORREVIEJA_TECHNICAL_PRECONTENT_AUDIT_20260718.md",
+        "artifact_date": "2026-07-18",
+        "sha256": "4aa2dd6a670f99cd7d12936a2a8c33107280d7147bd3b4f5bb9fd122953ff057"
+      },
+      {
+        "case": "torrevieja",
+        "artifact": "TORREVIEJA_WORDPRESS_TECHNICAL_RECOMMENDATIONS_20260626.md",
+        "artifact_date": "2026-06-26",
+        "sha256": "4cf91cd37de991eb0109ec1db6bf222897907405580d8258bfa1c50cc24ac676"
+      },
+      {
+        "case": "torrevieja",
+        "artifact": "TORREVIEJA_FULL_DB_CLEANUP_FINAL_20260626.md",
+        "artifact_date": "2026-06-26",
+        "sha256": "e85e9ef8e395c68673be9e850c3b18c0f99ee3ec8f2588a737fa6edce1a73afb"
+      },
+      {
+        "case": "torrevieja",
+        "artifact": "TORREVIEJA_FINAL_PRE_CUTOVER_PACKAGE_20260702.md",
+        "artifact_date": "2026-07-02",
+        "sha256": "8cdfb64552af5719ce11398eb7ec65ef47867f7b09dfca63d0e9c9ced75793ac"
+      },
+      {
+        "case": "velas",
+        "artifact": "VELAS_URL_SOURCE_COVERAGE_GATE_RECONCILED_2026-07-20T20-55-35Z.md",
+        "artifact_date": "2026-07-20",
+        "sha256": "f7c92d8307cfe421f0bd8b7841e4f005aacdc9d5cceb06c5f8ca78674398e20d"
+      },
+      {
+        "case": "velas",
+        "artifact": "VELAS_FULL_POST_CUTOVER_SEO_VERIFICATION_20260721.md",
+        "artifact_date": "2026-07-21",
+        "sha256": "3b1ec17590c7b19ba61b6abe600755b47c7dc4389fb984e78c7266f379079135"
+      },
+      {
+        "case": "velas",
+        "artifact": "VELAS_MIGRATION_FINAL_SEO_CLOSEOUT_HANDOFF_20260721.md",
+        "artifact_date": "2026-07-21",
+        "sha256": "7ace0f1bf98656e5d3b81945460ee4a357a4a478ce21e2f432dbed2187f20542"
+      },
+      {
+        "case": "velas",
+        "artifact": "velas_live_final_seo_closeout_apply.rolled-back.json",
+        "artifact_date": "2026-07-21",
+        "sha256": "990a59ee6b961626f44044df9941932d62be6b25cd2b4acd1d83c0830a0f09de"
+      },
+      {
+        "case": "velas",
+        "artifact": "velas_live_final_seo_closeout_apply.success.json",
+        "artifact_date": "2026-07-21",
+        "sha256": "2721e42d52baa22a4f42f63ab647269d134e3c6871a482a00f145de0200eb566"
+      }
+    ],
+    "hash_scope": "The hashes identify the exact private reports and JSON evidence reviewed when these aggregates were transcribed; they do not expose the artifacts or make the private metrics independently reproducible or externally audited."
+  },
+  "public_product_boundary": {
+    "public_fixture_url_count": 11,
+    "fixture_role": "privacy-safe reproducible behavior demonstration, not a scale benchmark",
+    "offline_export_adapters_included": true,
+    "offline_export_adapter_types": [
+      "Google Search Console CSV/JSON",
+      "Google Analytics 4 CSV/JSON",
+      "WordPress CSV/JSON",
+      "crawler CSV/JSON",
+      "generic inventory CSV/JSON"
+    ],
+    "guarded_release_contract_included": true,
+    "public_product_is_read_only": true,
+    "private_live_connectors_included": false,
+    "private_apply_or_rollback_included": false,
+    "excluded_private_connector_examples": [
+      "Google OAuth and live APIs",
+      "WordPress REST or database credentials",
+      "crawler control",
+      "hosting logs",
+      "CMS writes",
+      "Drive history collectors",
+      "Wayback collectors",
+      "Common Crawl collectors",
+      "production apply and automatic rollback"
+    ]
+  },
+  "cases": [
+    {
+      "id": "torrevieja",
+      "label": "TorreviejaTour",
+      "scope": "private operational evidence",
+      "site_history_since": 2013,
+      "proofrank_existed_in_2013": false,
+      "legacy_platform": {
+        "wordpress": "4.4.34",
+        "php": "5.6.40",
+        "mysql": "5.7.21",
+        "woocommerce": "2.5.2",
+        "active_plugins": 39
+      },
+      "database_cleanup": {
+        "physical_size_before_gb_approx": 1.73,
+        "physical_size_after_mb_approx": 105.71,
+        "expired_advert_posts_removed": 114557,
+        "spam_subscriber_users_removed": 72696
+      },
+      "modernized_platform": {
+        "wordpress": "7.0",
+        "php": "8.5.2",
+        "mysql": "8.4.8",
+        "woocommerce": "10.9.1"
+      },
+      "active_site": {
+        "known_urls": 3141,
+        "html_pages": 3137,
+        "coverage_percent": 99.872652,
+        "child_sitemaps_resolved": 18,
+        "sitemap_urls": 3108
+      },
+      "migration_gate": {
+        "known_paths": 3598,
+        "previously_successful_paths": 3090,
+        "previously_successful_paths_now_non_200": 0
+      },
+      "findings": {
+        "orphan_candidates": 104,
+        "unreachable_from_homepage": 470,
+        "click_depth_four_or_greater": 2071,
+        "links_to_noncanonical_urls": 251,
+        "exact_duplicate_groups": 35,
+        "cannibalization_candidates": 36
+      },
+      "broader_historical_scope": {
+        "url_identities": 3641,
+        "html_coverage_percent": 86.16,
+        "graph_wide_claims_withheld": true
+      }
+    },
+    {
+      "id": "velas",
+      "label": "Velas Purpuras / Alye Parusa",
+      "scope": "private operational evidence",
+      "content_history_since": 2013,
+      "proofrank_existed_in_2013": false,
+      "languages": 7,
+      "published_properties": {
+        "es": 872,
+        "ru": 905
+      },
+      "legacy_platform": {
+        "es": {
+          "wordpress": "4.5.33",
+          "php": "5.6.40",
+          "mysql": "5.7.21",
+          "active_plugins": 42
+        },
+        "ru": {
+          "wordpress": "4.8.28",
+          "php": "5.6.40",
+          "mysql": "5.7.21",
+          "active_plugins": 41
+        }
+      },
+      "modernized_platform": {
+        "wordpress": "7.0.1",
+        "php": "8.5.2",
+        "mysql": "8.4.8"
+      },
+      "initial_known_url_gate": {
+        "passed": 1807,
+        "total": 1807
+      },
+      "historical_drive_parity_gate": {
+        "passed": 3696,
+        "total": 3696
+      },
+      "reconciled_source_union": {
+        "base_unique_identities": 5490,
+        "normalized_identities": 11172,
+        "supplemental_parity_rows": 5696,
+        "hard_regressions": 0,
+        "unclassified_rows": 0,
+        "required_sources_missing": [],
+        "attempted_but_unavailable": [
+          "bing_webmaster_export",
+          "gsc_links_export"
+        ],
+        "status": "yellow"
+      },
+      "full_postcutover_audit": {
+        "source_union_rows": 11172,
+        "current_only_rows": 991,
+        "total_classified_rows": 12163,
+        "active_canonical_html_parsed": 5376,
+        "active_canonical_html_required": 5376,
+        "observed_graph": "withheld",
+        "source_bound_site_graph": "withheld",
+        "source_gate": "yellow",
+        "crawl_frontier_closed": false
+      },
+      "collected_source_counts": {
+        "old_full_known_map_page_like_rows": 1780,
+        "historical_drive_parity": 3696,
+        "gsc_performance_pages": 67,
+        "ga4_production_host_landings": 75,
+        "wordpress_published_inventory": 1343,
+        "public_sitemap_urls": 1593,
+        "internal_crawl_observations": 5069,
+        "hosting_log_page_like_paths": 2004,
+        "wayback_cdx": 2096,
+        "common_crawl": 323,
+        "counts_overlap_and_must_not_be_summed": true
+      },
+      "guarded_closeout": {
+        "scope": {
+          "old_es_paths": 63,
+          "live_destinations": 18,
+          "invalid_exact_alternates": 220,
+          "language_source_pages": 442,
+          "live_file_targets": 3
+        },
+        "first_apply": {
+          "redirects_green": "63/63",
+          "language_pages_green": "19/442",
+          "invalid_alternate_emissions_remaining": 1522,
+          "automatic_rollback_performed": true,
+          "automatic_rollback_ok": true,
+          "files_restored": 3,
+          "live_changed_after_rollback": false
+        },
+        "corrected_apply": {
+          "redirects_green": "63/63",
+          "language_pages_green": "442/442",
+          "invalid_alternate_emissions_remaining": 0,
+          "automatic_rollback_performed": false
+        },
+        "final_gates": {
+          "existing_routes": "148/148",
+          "existing_redirects": "65/65",
+          "existing_hreflang_sources": "33/33",
+          "realhomes_business_smoke": "40/40",
+          "desktop_mobile_browsability": "26/26",
+          "language_visual_qa": "8/8",
+          "screenshots": 24,
+          "es_sitemap_urls": 428,
+          "ru_sitemap_children": 11,
+          "ru_sitemap_urls": 1169,
+          "critical_log_errors": 0,
+          "verified_googlebot_on_both_new_roots": true
+        }
+      }
+    }
+  ],
+  "interpretation": {
+    "operational_evidence_is_public_plugin_output": false,
+    "private_apply_or_rollback_is_public_plugin_output": false,
+    "offline_export_import_is_live_api_integration": false,
+    "proofrank_existed_in_2013": false,
+    "cannibalization_is_final_diagnosis": false,
+    "human_review_required": true,
+    "withheld_claims_are_expected_when_evidence_is_incomplete": true,
+    "evidence_weight_may_remove_low_weight_urls_from_completeness_denominator": false
+  }
+}

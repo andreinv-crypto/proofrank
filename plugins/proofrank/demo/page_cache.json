@@ -1,6 +1,7 @@
 {
   "site": "https://costa-demo.example/",
   "generated_at": "2026-07-18T12:00:00Z",
+  "html_complete": true,
   "pages": {
     "https://costa-demo.example/": {
       "status": 200,

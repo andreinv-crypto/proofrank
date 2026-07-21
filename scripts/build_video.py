@@ -18,7 +18,7 @@ WIDTH = 1920
 HEIGHT = 1080
 INTRO_PAD = 0.55
 GAP = 0.14
-OUTRO_PAD = 0.8
+OUTRO_PAD = 1.3
 
 
 def run(command: list[str], *, cwd: Path | None = None) -> None:
@@ -98,13 +98,20 @@ def main() -> int:
     parser.add_argument(
         "--srt-output",
         type=Path,
-        help="Optional sidecar subtitle path. Captions are always burned into the MP4.",
+        help="Sidecar subtitle path for YouTube or another player. Defaults to the MP4 path with .srt.",
+    )
+    parser.add_argument(
+        "--burn-subtitles",
+        action="store_true",
+        help="Burn the generated captions into the MP4. Off by default to avoid duplicate player captions.",
     )
     args = parser.parse_args()
 
     for field in ("manifest", "audio_dir", "assets_dir", "build_dir", "output", "ffmpeg", "ffprobe"):
         setattr(args, field, getattr(args, field).resolve())
-    if args.srt_output is not None:
+    if args.srt_output is None:
+        args.srt_output = args.output.with_suffix(".srt")
+    else:
         args.srt_output = args.srt_output.resolve()
 
     segments = json.loads(args.manifest.read_text(encoding="utf-8"))
@@ -225,23 +232,26 @@ def main() -> int:
         "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,"
         "Outline=1,Shadow=0,Alignment=2,MarginV=22'"
     )
-    run([
+    mux_command = [
         str(args.ffmpeg), "-y", "-loglevel", "error", "-i", str(visuals), "-i", str(narration),
-        "-vf", subtitle_filter, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+    ]
+    if args.burn_subtitles:
+        mux_command += ["-vf", subtitle_filter]
+    mux_command += [
+        "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
         "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart",
         "-t", f"{total_duration:.3f}", str(args.output.resolve()),
-    ], cwd=args.build_dir)
+    ]
+    run(mux_command, cwd=args.build_dir)
 
-    sidecar = None
-    if args.srt_output is not None:
-        args.srt_output.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(srt, args.srt_output)
-        sidecar = str(args.srt_output)
+    args.srt_output.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(srt, args.srt_output)
+    sidecar = str(args.srt_output)
     result = {
         "status": "ok",
         "output": str(args.output.resolve()),
-        "burned_subtitles": True,
+        "burned_subtitles": args.burn_subtitles,
         "sidecar_subtitles": sidecar,
         "duration_seconds": round(duration(args.ffprobe, args.output), 3),
         "narration_segments": len(segments),

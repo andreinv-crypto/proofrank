@@ -82,8 +82,10 @@ HTML_TEMPLATE = r'''<!doctype html>
     .boundary {
       border: 1px solid rgba(86,217,210,.26); border-radius: 18px; background: var(--cyan-soft); padding: 18px;
     }
-    .boundary strong { display: block; color: var(--cyan); margin-bottom: 6px; }
-    .boundary span { color: #c3d6e7; }
+    .boundary strong { display: block; color: var(--cyan); margin: 7px 0 4px; font-size: 28px; line-height: 1.05; letter-spacing: -.035em; }
+    .boundary span { display: block; color: #d9e6f1; font-weight: 700; }
+    .boundary p { color: #b8cada; margin: 8px 0 0; }
+    .boundary small { display: block; color: var(--muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(163,188,217,.16); }
     .boundary.withheld { border-color: rgba(255,199,106,.45); background: rgba(255,199,106,.1); }
     .boundary.withheld strong { color: var(--gold); }
     .tabs { display: flex; gap: 8px; margin: 22px 0 16px; overflow-x: auto; padding-bottom: 2px; }
@@ -121,6 +123,25 @@ HTML_TEMPLATE = r'''<!doctype html>
     .bar-track { height: 8px; background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden; }
     .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
     .bar-count { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+    .fact-row {
+      display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, .9fr); gap: 14px;
+      align-items: start; margin: 10px 0;
+    }
+    .fact-label { color: #ccdae8; font-size: 13px; }
+    .fact-value { color: var(--muted); text-align: right; font-size: 13px; overflow-wrap: anywhere; }
+    .source-list { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .source-list h3 { margin: 0 0 3px; font-size: 14px; }
+    .source-list > p { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+    .source-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center;
+      padding: 10px 0; border-top: 1px solid rgba(163, 188, 217, .1);
+    }
+    .source-row:first-of-type { border-top: 0; }
+    .source-name { color: #d8e4ee; overflow-wrap: anywhere; }
+    .source-kind { display: block; color: var(--muted); font-size: 11px; }
+    .source-state { color: var(--muted); font-size: 12px; text-align: right; }
+    .source-state.ready { color: var(--green); }
+    .source-state.missing { color: var(--gold); }
     .filters { display: grid; grid-template-columns: minmax(180px, 1fr) 160px 160px; gap: 10px; margin-bottom: 14px; }
     .control {
       width: 100%; border: 1px solid var(--line); border-radius: 12px; background: #0a1929; color: var(--text); padding: 11px 12px;
@@ -174,6 +195,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       .drawer { grid-template-columns: 1fr; }
       .drawer-panel { grid-column: 1; }
       .footer { flex-direction: column; }
+      .fact-row { grid-template-columns: minmax(0, 1fr) minmax(108px, .8fr); gap: 10px; }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
   </style>
@@ -196,13 +218,16 @@ HTML_TEMPLATE = r'''<!doctype html>
 
     <section class="hero">
       <div>
-        <div class="eyebrow">Site intelligence without guesswork</div>
-        <h1>Know the graph before you touch the site.</h1>
-        <p>ProofRank separates measured facts, cautious candidates, and withheld conclusions—so teams can prioritize impact without turning a partial crawl into a risky SEO decision.</p>
+        <div class="eyebrow">Pre-migration evidence gate</div>
+        <h1>Don't lose valuable pages when an old site moves.</h1>
+        <p>ProofRank reconciles saved SEO and CMS evidence, proves what is actually known, and tells the team to stop when an apparently complete crawl is not enough.</p>
       </div>
       <div class="boundary" id="boundaryCard">
-        <strong id="gateHeadline">Decision boundary</strong>
-        <span id="decisionBoundary"></span>
+        <div class="eyebrow">Owner / release view</div>
+        <strong id="releaseDecision">WITHHOLD</strong>
+        <span id="gateHeadline">Decision boundary</span>
+        <p id="decisionBoundary"></p>
+        <small id="nextAction"></small>
       </div>
     </section>
 
@@ -222,9 +247,14 @@ HTML_TEMPLATE = r'''<!doctype html>
             <div id="findingBars"></div>
           </article>
           <article class="card">
-            <div class="section-title"><div><h2>Coverage gate</h2><p>Completeness before graph-level claims</p></div></div>
+            <div class="section-title"><div><h2>Completeness gates</h2><p>Source universe → observed content graph → final graph</p></div></div>
             <div class="coverage-ring" id="coverageRing"><div><strong id="coverageValue"></strong><span>HTML coverage</span></div></div>
             <div id="coverageNotes"></div>
+            <div class="source-list">
+              <h3>Declared source universe</h3>
+              <p id="sourceSummary"></p>
+              <div id="sourceRows"></div>
+            </div>
           </article>
         </div>
       </section>
@@ -251,11 +281,11 @@ HTML_TEMPLATE = r'''<!doctype html>
       <section class="panel-view" id="method" hidden>
         <div class="method-grid">
           <article class="card"><div class="step-num">01 / PROVENANCE</div><h3>Merge without erasing sources</h3><p>Inventory, sitemap, and cache URLs are normalized while their origin remains attached to every record.</p></article>
-          <article class="card"><div class="step-num">02 / COMPLETENESS</div><h3>Gate graph claims</h3><p>Orphans and click depth are only evaluated after the homepage, child sitemaps, and coverage threshold are verified.</p></article>
+          <article class="card"><div class="step-num">02 / COMPLETENESS</div><h3>Pass both gates</h3><p>Whole-site claims require a declared, evidence-bound source universe and 100% usable HTML for active graph-eligible URLs, plus the homepage and every child sitemap.</p></article>
           <article class="card"><div class="step-num">03 / SEPARATION</div><h3>Keep mechanisms apart</h3><p>Languages, articles, products, rentals, tours, and taxonomies stay in separate lanes to reduce false consolidation advice.</p></article>
           <article class="card"><div class="step-num">04 / EVIDENCE</div><h3>Label certainty</h3><p>Every finding is marked confirmed, candidate, or withheld. Similarity alone never authorizes URL removal.</p></article>
           <article class="card"><div class="step-num">05 / SAFETY</div><h3>No silent production writes</h3><p>The audit is local-first and read-only. Network crawling and all live mutations require separate, explicit authorization.</p></article>
-          <article class="card"><div class="step-num">06 / HANDOFF</div><h3>Make the next step small</h3><p>Outputs include machine-readable JSON/CSV, a concise report, and this local dashboard for fast human review.</p></article>
+          <article class="card"><div class="step-num">06 / HANDOFF</div><h3>Stop or hand off deterministically</h3><p><code>decision.json</code> and the optional CLI gate return WITHHOLD / exit 2 or READY_FOR_HUMAN_REVIEW / exit 0. Neither state authorizes a live change.</p></article>
         </div>
       </section>
     </main>
@@ -291,22 +321,42 @@ HTML_TEMPLATE = r'''<!doctype html>
     document.getElementById("footerSite").textContent = `${payload.site} · ${payload.generated_at}`;
 
     const c = payload.coverage;
-    const gatePassed = Boolean(c.graph_complete);
+    const sourceUniverse = payload.source_universe || { declared: false, sources: [] };
+    const completeness = payload.completeness;
+    const release = payload.release_contract || {
+      decision: completeness.gate_passed ? "READY_FOR_HUMAN_REVIEW" : "WITHHOLD",
+      release_gate_passed: Boolean(completeness.gate_passed),
+      live_change_authorized: false,
+      unclassified_count: 0,
+      blocker_codes: []
+    };
+    const sourceDeclared = Boolean(completeness.source_declared);
+    const sourceComplete = Boolean(completeness.source_complete);
+    const contentGraphComplete = Boolean(completeness.content_graph_complete);
+    const gatePassed = Boolean(completeness.gate_passed);
+    const sourceLabel = completeness.source_label;
+    const contentLabel = completeness.content_label;
+    const finalLabel = completeness.final_label;
     const boundaryCard = document.getElementById("boundaryCard");
     boundaryCard.classList.toggle("withheld", !gatePassed);
-    document.getElementById("gateHeadline").textContent = gatePassed ? "Coverage gate passed" : "ProofRank stopped";
-    document.getElementById("decisionBoundary").textContent = gatePassed
-      ? payload.decision_boundary
-      : "Coverage is incomplete. Whole-site graph conclusions are withheld until the missing evidence is collected.";
+    document.getElementById("releaseDecision").textContent = release.decision.replaceAll("_", " ");
+    document.getElementById("gateHeadline").textContent = completeness.headline;
+    document.getElementById("decisionBoundary").textContent = completeness.boundary;
+    document.getElementById("nextAction").textContent = gatePassed
+      ? "Next: an SEO specialist reviews the evidence. A separate approval is still required before any live change."
+      : release.unclassified_count > 0
+        ? `Next: reconcile ${number(release.unclassified_count)} unclassified identities before planning a migration or cleanup.`
+        : "Next: resolve the listed evidence blockers before planning a migration or cleanup.";
     const totalFindings = payload.findings.length;
-    const confirmed = payload.findings.filter(f => f.status === "confirmed").length;
-    const withheld = payload.findings.filter(f => f.status === "withheld").length;
     const high = payload.findings.filter(f => f.severity === "high").length;
+    const observedSource = sourceUniverse.observed_normalized_identities ?? c.observed_source_identities ?? c.known_urls;
+    const expectedSource = sourceUniverse.expected_normalized_identities ?? c.expected_source_identities;
+    const sourceCountLabel = expectedSource == null ? number(observedSource) : `${number(observedSource)}/${number(expectedSource)}`;
     const metricData = [
-      ["Known URLs", number(c.known_urls), `${number(c.sitemap_urls)} sitemap entries`, ""],
-      ["HTML coverage", pct(c.html_coverage), `${number(c.html_pages)} parsed pages`, gatePassed ? "good" : "warn"],
-      ["Evidence items", number(totalFindings), gatePassed ? `${number(confirmed)} confirmed` : `${number(withheld)} withheld`, ""],
-      ["Graph claims", gatePassed ? "Enabled" : "Withheld", gatePassed ? `${number(high)} high-priority items` : "No whole-site inference", gatePassed ? "good" : "warn"]
+      ["Source identities", sourceCountLabel, `${number(release.unclassified_count)} unclassified · ${number(sourceUniverse.required_source_count)} required sources`, sourceComplete ? "good" : "warn"],
+      ["Active HTML", `${number(c.html_pages)}/${number(c.graph_eligible_urls ?? c.known_urls)}`, `${pct(c.html_coverage)} usable · ${number(c.resolved_non_graph_urls)} confirmed terminal`, contentGraphComplete ? "good" : "warn"],
+      ["Release evidence", release.decision.replaceAll("_", " "), release.live_change_authorized ? "Live change authorized" : "Live changes never authorized here", gatePassed ? "good" : "warn"],
+      ["Review queue", number(totalFindings), gatePassed ? `${number(high)} high-priority items` : `${number((release.blocker_codes || []).length)} blocker codes · graph claims withheld`, gatePassed ? "good" : "warn"]
     ];
     metricData.forEach(([label, value, note, cls]) => {
       const card = document.createElement("article"); card.className = "card";
@@ -331,18 +381,56 @@ HTML_TEMPLATE = r'''<!doctype html>
     $("#coverageRing").classList.toggle("withheld", !gatePassed);
     $("#coverageValue").textContent = pct(c.html_coverage);
     const notes = [
+      ["Source universe", `${sourceCountLabel} · ${sourceLabel}`],
+      ["Unclassified identities", number(release.unclassified_count)],
+      ["Required sources", sourceDeclared ? (sourceUniverse.required_sources_complete ? "Complete" : "Incomplete") : "Not declared"],
+      ["Manifest site", sourceDeclared ? (sourceUniverse.site_matches ? "Matched" : "Mismatch") : "Not declared"],
+      ["Inventory hash binding", sourceDeclared ? (sourceUniverse.inventory_binding_complete ? "Verified" : "Missing / mismatch") : "Not declared"],
+      ["HTML-cache hash binding", sourceDeclared ? (sourceUniverse.page_cache_binding_complete ? "Verified / not used" : "Missing / mismatch") : "Not declared"],
+      ["Sitemap hash binding", sourceDeclared ? (sourceUniverse.sitemap_binding_complete ? "Verified / not used" : "Missing / mismatch") : "Not declared"],
       ["Homepage parsed", c.homepage_parsed ? "Yes" : "No"],
+      ["Graph-eligible URLs", number(c.graph_eligible_urls ?? c.known_urls)],
+      ["Resolved redirects / gone", number(c.resolved_non_graph_urls)],
       ["Unresolved sitemaps", number(c.unresolved_sitemaps)],
-      ["Completeness threshold", pct(c.complete_threshold)],
-      ["Graph-level claims", c.graph_complete ? "Enabled" : "Withheld"]
+      ["Required active HTML", pct(c.complete_threshold)],
+      ["Observed content graph", contentLabel],
+      ["Final graph", finalLabel],
+      ["Release decision", release.decision.replaceAll("_", " ")],
+      ["Live change authorized", release.live_change_authorized ? "Yes" : "No"]
     ];
     notes.forEach(([label, value]) => {
-      const row = document.createElement("div"); row.className = "bar-row";
-      const left = document.createElement("div"); left.className = "bar-label"; left.textContent = label;
-      const spacer = document.createElement("div");
-      const right = document.createElement("div"); right.className = "bar-count"; right.textContent = value;
-      row.append(left, spacer, right); $("#coverageNotes").append(row);
+      const row = document.createElement("div"); row.className = "fact-row";
+      const left = document.createElement("div"); left.className = "fact-label"; left.textContent = label;
+      const right = document.createElement("div"); right.className = "fact-value"; right.textContent = value;
+      row.append(left, right); $("#coverageNotes").append(row);
     });
+
+    const readyStatuses = new Set(["collected", "complete", "included", "loaded", "resolved"]);
+    const sourceRows = Array.isArray(sourceUniverse.sources) ? sourceUniverse.sources : [];
+    if (!sourceDeclared) {
+      $("#sourceSummary").textContent = "No source manifest was declared. This is a legacy audit; source-universe completeness is not proven.";
+    } else if (!sourceComplete) {
+      $("#sourceSummary").textContent = "Whole-site graph claims are withheld until every required source is ready and the declared universe is complete.";
+    } else {
+      $("#sourceSummary").textContent = "The operator declaration, required source rows, audited origin, and exact inventory / supplied HTML-cache / resolved-sitemap hash bindings passed the source gate.";
+    }
+    if (!sourceRows.length) {
+      const empty = document.createElement("div"); empty.className = "empty";
+      empty.textContent = sourceDeclared ? "No source rows are listed in this manifest." : "Legacy / not declared";
+      $("#sourceRows").append(empty);
+    } else {
+      sourceRows.forEach(source => {
+        const row = document.createElement("div"); row.className = "source-row";
+        const name = document.createElement("div"); name.className = "source-name"; name.textContent = escText(source.id);
+        const kind = document.createElement("span"); kind.className = "source-kind"; kind.textContent = escText(source.kind); name.append(kind);
+        const state = document.createElement("div");
+        const ready = readyStatuses.has(String(source.status || "").toLowerCase());
+        state.className = `source-state ${ready ? "ready" : "missing"}`;
+        const records = source.records == null ? "" : ` · ${number(source.records)} records`;
+        state.textContent = `${source.required ? "required" : "optional"} · ${escText(source.status)}${records}`;
+        row.append(name, state); $("#sourceRows").append(row);
+      });
+    }
 
     const rows = $("#findingRows");
     function showDrawer(finding) {
@@ -401,7 +489,7 @@ HTML_TEMPLATE = r'''<!doctype html>
     $("#drawer").addEventListener("click", e => { if (e.target === $("#drawer")) $("#drawer").hidden = true; });
     document.addEventListener("keydown", e => { if (e.key === "Escape") $("#drawer").hidden = true; });
     $("#copySummary").addEventListener("click", async () => {
-      const summary = `ProofRank audit for ${payload.site}: ${c.known_urls} URLs, ${pct(c.html_coverage)} HTML coverage, ${totalFindings} evidence items, graph ${c.graph_complete ? "complete" : "withheld"}.`;
+      const summary = `ProofRank audit for ${payload.site}: decision ${release.decision}, source identities ${sourceCountLabel}, active HTML ${c.html_pages}/${c.graph_eligible_urls ?? c.known_urls}, unclassified ${release.unclassified_count}, final graph ${finalLabel.toLowerCase()}, live change authorized no.`;
       try { await navigator.clipboard.writeText(summary); $("#copySummary").textContent = "Copied"; setTimeout(() => $("#copySummary").textContent = "Copy summary", 1400); }
       catch { $("#copySummary").textContent = "Copy unavailable"; }
     });
@@ -410,13 +498,146 @@ HTML_TEMPLATE = r'''<!doctype html>
 </html>'''
 
 
+def public_source_universe(audit: dict) -> dict:
+    """Expose source-gate evidence without leaking manifest paths or free-form notes."""
+    inputs = audit.get("inputs") if isinstance(audit.get("inputs"), dict) else {}
+    raw = audit.get("source_universe") or inputs.get("source_universe") or {}
+    if not isinstance(raw, dict):
+        raw = {}
+
+    declared = bool(raw.get("declared")) if "declared" in raw else bool(raw)
+    safe_sources = []
+    for index, source in enumerate(raw.get("sources", []), start=1):
+        if not isinstance(source, dict):
+            continue
+        safe = {
+            "id": str(source.get("id") or source.get("name") or f"source-{index}"),
+            "kind": str(source.get("kind") or source.get("type") or "unspecified"),
+            "required": bool(source.get("required")),
+            "status": str(source.get("status") or "unspecified"),
+        }
+        records = source.get("records")
+        if isinstance(records, (int, float)) and not isinstance(records, bool):
+            safe["records"] = records
+        elif isinstance(records, str) and records.strip().isdigit():
+            safe["records"] = int(records.strip())
+        safe_sources.append(safe)
+
+    required_count = raw.get("required_source_count")
+    if not isinstance(required_count, int) or isinstance(required_count, bool):
+        required_count = sum(1 for source in safe_sources if source["required"])
+
+    return {
+        "declared": declared,
+        "universe_declared_complete": bool(raw.get("universe_declared_complete")) if declared else False,
+        "required_sources_complete": bool(raw.get("required_sources_complete")) if declared else False,
+        "site_matches": bool(raw.get("site_matches")) if declared else False,
+        "inventory_binding_complete": bool(raw.get("inventory_binding_complete")) if declared else False,
+        "page_cache_binding_complete": bool(raw.get("page_cache_binding_complete")) if declared else False,
+        "sitemap_binding_complete": bool(raw.get("sitemap_binding_complete")) if declared else False,
+        "input_binding_complete": bool(raw.get("input_binding_complete")) if declared else False,
+        "source_universe_complete": bool(raw.get("source_universe_complete")) if declared else False,
+        "expected_normalized_identities": raw.get("expected_normalized_identities"),
+        "observed_normalized_identities": raw.get("observed_normalized_identities", 0),
+        "identity_count_matches": raw.get("identity_count_matches"),
+        "required_source_count": required_count,
+        "sources": safe_sources,
+    }
+
+
+def public_release_contract(audit: dict) -> dict:
+    """Expose the machine decision without local paths or mutable-action authority."""
+    raw = audit.get("release_contract") if isinstance(audit.get("release_contract"), dict) else {}
+    coverage = audit.get("coverage") if isinstance(audit.get("coverage"), dict) else {}
+    passed = bool(raw.get("release_gate_passed")) if raw else bool(coverage.get("graph_complete"))
+    blockers = raw.get("blocker_codes") if isinstance(raw.get("blocker_codes"), list) else []
+    stages = raw.get("stages") if isinstance(raw.get("stages"), dict) else {}
+    return {
+        "schema_version": str(raw.get("schema_version") or "1.0"),
+        "decision": str(raw.get("decision") or ("READY_FOR_HUMAN_REVIEW" if passed else "WITHHOLD")),
+        "release_gate_passed": passed,
+        "live_change_authorized": False,
+        "stages": stages,
+        "unclassified_count": int(raw.get("unclassified_count") or 0),
+        "blocker_codes": [str(value) for value in blockers],
+        "decision_boundary": str(raw.get("decision_boundary") or "Read-only evidence result."),
+    }
+
+
+def completeness_view(audit: dict, source_universe: dict) -> dict:
+    """Build the exact labels shown for the two gates and their final result."""
+    coverage = audit.get("coverage") if isinstance(audit.get("coverage"), dict) else {}
+    source_declared = bool(source_universe["declared"])
+    source_complete = source_declared and bool(source_universe["source_universe_complete"])
+    content_graph_complete = coverage.get("content_graph_complete")
+    if not isinstance(content_graph_complete, bool):
+        content_graph_complete = bool(coverage.get("graph_complete"))
+    gate_passed = bool(
+        source_declared
+        and source_complete
+        and content_graph_complete
+        and coverage.get("graph_complete")
+    )
+
+    if not source_declared:
+        source_label = "Legacy / not declared"
+        final_label = "Legacy / not proven"
+        headline = "Legacy audit — manifest not declared"
+        boundary = (
+            "The observed graph may pass the legacy HTML gate, but the source universe was not declared. "
+            "Whole-site completeness is not proven; rerun with a source manifest."
+        )
+    elif not source_complete:
+        source_label = "Declaration failed"
+        final_label = "Withheld"
+        headline = "Source universe incomplete"
+        boundary = (
+            "Required source evidence is missing or the declared universe is incomplete. "
+            "Whole-site graph claims are withheld until the source gate passes."
+        )
+    elif not content_graph_complete:
+        source_label = "Declared + bound"
+        final_label = "Withheld"
+        headline = "Observed graph incomplete"
+        boundary = (
+            "Observed HTML coverage, homepage parsing, or sitemap resolution is incomplete. "
+            "Whole-site graph claims are withheld until the content gate passes."
+        )
+    elif gate_passed:
+        source_label = "Declared + bound"
+        final_label = "Gate passed"
+        headline = "Both completeness gates passed"
+        boundary = audit.get("decision_boundary", "No live changes are authorized by this audit.")
+    else:
+        source_label = "Declared + bound"
+        final_label = "Withheld"
+        headline = "Whole-site claims withheld"
+        boundary = "The final graph gate did not pass. Whole-site graph claims remain withheld."
+
+    return {
+        "source_declared": source_declared,
+        "source_complete": source_complete,
+        "content_graph_complete": content_graph_complete,
+        "gate_passed": gate_passed,
+        "source_label": source_label,
+        "content_label": "Coverage passed" if content_graph_complete else "Coverage failed",
+        "final_label": final_label,
+        "headline": headline,
+        "boundary": boundary,
+    }
+
+
 def public_payload(audit: dict) -> dict:
     """Keep the static dashboard free of local input paths and secrets."""
+    source_universe = public_source_universe(audit)
     return {
         "generated_at": audit.get("generated_at"),
         "mode": audit.get("mode"),
         "site": audit.get("site"),
         "coverage": audit.get("coverage", {}),
+        "source_universe": source_universe,
+        "completeness": completeness_view(audit, source_universe),
+        "release_contract": public_release_contract(audit),
         "finding_counts": audit.get("finding_counts", {}),
         "findings": audit.get("findings", []),
         "pages": audit.get("pages", []),

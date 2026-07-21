@@ -1,82 +1,67 @@
 [
   {
-    "id": "01-founder-a",
+    "id": "01-hook",
+    "scene": "hook",
+    "text": "Incomplete evidence can look complete—and make an SEO migration dangerous. ProofRank is a read-only pre-migration inspector: it reconciles search, analytics, CMS, sitemap, crawler, and saved HTML, then withholds priorities until the URL universe and active pages are proven."
+  },
+  {
+    "id": "02-founder-a",
     "scene": "founder",
-    "text": "I’m Andrei Zakharov. For over thirteen years, I’ve built and grown online projects across marketing, SEO, and automation."
+    "text": "I’m Andrei Zakharov, an SEO and digital project specialist with thirteen-plus years of experience."
   },
   {
-    "id": "02-founder-b",
+    "id": "03-founder-b",
     "scene": "founder",
-    "text": "I’m fully paralysed, so every click and correction has a physical cost. Codex helps me turn experience and new ideas into working software—with less physical effort and more creative freedom."
+    "text": "I’m fully paralysed. Codex lowers the physical cost of turning experience and ideas into working systems, unlocking more of my professional and creative potential."
   },
   {
-    "id": "04-risk-a",
-    "scene": "risk",
-    "text": "An AI can sound certain after seeing only part of a website."
-  },
-  {
-    "id": "05-risk-b",
-    "scene": "risk",
-    "text": "On a live site, that can trigger risky changes. Confidence is not evidence."
-  },
-  {
-    "id": "06-promise",
-    "scene": "promise",
-    "text": "ProofRank is a read-only Codex plugin for SEO and web operations teams. It separates confirmed findings from candidates—and withholds site-wide conclusions when the crawl is incomplete."
-  },
-  {
-    "id": "07-codex-a",
+    "id": "04-codex-demo",
     "scene": "codex",
-    "text": "Inside Codex, I run the audit-site-graph skill on a synthetic eleven-page website."
+    "text": "Two synthetic runs show the difference. Python computes the evidence; Codex with GPT-5.6 follows the skill and explains the decision."
   },
   {
-    "id": "08-codex-b",
-    "scene": "codex",
-    "text": "Here, Codex with GPT-5.6 follows the Skill’s safe local workflow and explains the result. Deterministic Python calculates the facts."
-  },
-  {
-    "id": "09-incomplete-a",
+    "id": "05-incomplete",
     "scene": "incomplete",
-    "text": "First, only seven of eleven pages are parsed: sixty-three point six four per cent coverage."
+    "text": "First: seven of eleven expected identities, but every observed active page has HTML—seven of seven. That false green leaves four unclassified, so ProofRank returns WITHHOLD, not a cleanup plan."
   },
   {
-    "id": "10-incomplete-b",
-    "scene": "incomplete",
-    "text": "The gate fails. ProofRank withholds the orphan conclusion and graph-level opportunities. It stops where the evidence stops."
-  },
-  {
-    "id": "11-complete-a",
+    "id": "06-complete",
     "scene": "complete",
-    "text": "With the complete cache, coverage reaches one hundred per cent, and the gate passes."
+    "text": "With all eleven identities, one confirmed terminal four-oh-four leaves ten active pages, all with usable HTML. The result: READY FOR HUMAN REVIEW."
   },
   {
-    "id": "12-complete-b",
-    "scene": "complete",
-    "text": "ProofRank surfaces confirmed technical issues and cautious candidates. I filter high-priority findings and inspect their evidence."
-  },
-  {
-    "id": "13-safety",
+    "id": "07-contract",
     "scene": "safety",
-    "text": "The self-contained dashboard strips local paths, loads no external scripts, and performs no live-site writes."
+    "text": "Decision dot JSON records both gates, blockers, and evidence hashes. The optional command-line gate returns exit two for WITHHOLD, zero for ready; neither authorizes a live change."
   },
   {
-    "id": "14-build-a",
+    "id": "08-proof-velas",
+    "scene": "proof",
+    "text": "The public demo is synthetic. Private seven-language evidence showed five thousand three hundred seventy-six of five thousand three hundred seventy-six active pages with HTML, but source readiness stayed yellow, so the conclusion remained withheld. Reconciliation reached eleven thousand one hundred seventy-two identities."
+  },
+  {
+    "id": "09-proof-rollback",
+    "scene": "rollback",
+    "text": "A separate guarded private apply workflow—not ProofRank—caught a static-cache defect, rolled back three files, then after repair passed four hundred forty-two of four hundred forty-two pages with zero invalid emissions."
+  },
+  {
+    "id": "10-proof-torrevieja",
+    "scene": "torrevieja",
+    "text": "Torrevieja checked three thousand five hundred ninety-eight paths; zero of three thousand ninety previously successful paths were lost."
+  },
+  {
+    "id": "11-impact",
+    "scene": "impact",
+    "text": "At roughly three thousand identities, our model suggests five to ten specialist hours saved when exports exist. It is an estimate; review and implementation remain human."
+  },
+  {
+    "id": "12-build",
     "scene": "architecture",
-    "text": "ProofRank grew from an earlier private workflow built with previous Codex models. During Build Week, Codex with GPT-5.6 helped turn those lessons into a reusable plugin."
+    "text": "Earlier Codex models supported the private workflows. During Build Week, GPT-5.6 exposed that one hundred percent observed HTML can hide an incomplete source universe. Codex helped implement adapters, two gates, terminal-URL semantics, decision JSON, exit codes, tests, dashboard, documentation, and the public plugin. Ultra reasoning reduced my correction cycles."
   },
   {
-    "id": "15-build-b",
-    "scene": "architecture",
-    "text": "I used GPT-5.6 at the Ultra reasoning level to implement and test this reproducible evidence-gate extension. Codex also ran validators, secret scans, and desktop and mobile checks."
-  },
-  {
-    "id": "16-scale-a",
-    "scene": "scale",
-    "text": "The public demo is synthetic. An earlier private workflow processed three thousand one hundred and thirty-seven URLs at ninety-nine point eight seven per cent HTML coverage—and informed ProofRank’s design."
-  },
-  {
-    "id": "17-scale-b",
+    "id": "13-outro",
     "scene": "outro",
-    "text": "Better models mean fewer correction cycles for me. Good automation should reduce correction work, not create more. ProofRank applies that principle to AI: when evidence is incomplete, the gate stops a confident mistake. I spend less energy translating intent—and have more freedom to turn ideas into products."
+    "text": "Judges can run both samples without rebuilding. ProofRank does not replace human judgment. It enforces one safety rule: no ranking without complete evidence."
   }
 ]

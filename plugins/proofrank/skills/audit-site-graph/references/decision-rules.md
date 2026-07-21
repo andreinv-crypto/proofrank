@@ -6,13 +6,14 @@
 - `candidate`: observed signal that requires another source, such as query/title overlap, near-duplicate text, or a weak internal-link target.
 - `withheld`: current inputs cannot support the conclusion.
 
-## Graph completeness
+## Release decision
 
-Declare the graph complete only when:
+Return `READY_FOR_HUMAN_REVIEW` only when both stages pass:
 
-1. parsed HTML coverage is at least the configured threshold (default 95% of known URLs);
-2. the normalized homepage is parsed;
-3. every supplied sitemap-index child is resolved.
+1. **Source universe:** the scope is explicitly declared, required sources are collected, origin and SHA-256 bindings match, `expected_normalized_identities` equals the observed normalized union, and no new page-like identity contradicts the declaration.
+2. **Active HTML:** usable parsed HTML covers 100% of active graph-eligible URLs; the normalized homepage is parsed; and every supplied sitemap-index child is resolved. The topology threshold cannot be lowered because one unseen active page can change inbound-link and reachability conclusions.
+
+Return `WITHHOLD` when either stage fails. Report the expected/observed source counts, `unclassified_count`, blocker codes, and both stage results rather than collapsing them into one percentage. A `7/7` active-HTML pass cannot override a `7/11` source-universe failure.
 
 When any condition fails:
 
@@ -20,6 +21,8 @@ When any condition fails:
 - do not treat missing links as proof;
 - report `zero_inbound_partial` only as a collection gap;
 - do not calculate sitewide click-depth conclusions.
+
+Every `decision.json` must retain `live_change_authorized=false`. `READY_FOR_HUMAN_REVIEW` is not approval to deploy. With `--gate-exit-code`, use exit `2` for `WITHHOLD` and `0` for ready-for-review; preserve ordinary error behavior for invalid inputs or runtime failures. Public ProofRank never applies or rolls back live changes.
 
 ## URL actions
 

@@ -1,104 +1,85 @@
-# ProofRank demo script — final story cut 2:43.702
+# ProofRank demo script — final 2:40 story cut
 
-English narration: 336 words. The final local export is 2:43.702 at 1920×1080 and 30 fps.
+The verified local export is 160.737 seconds at 1920×1080 and 30 fps. It uses 361 narrated words, real synthetic product runs, concise designed callouts, and no burned full-caption layer. The exact machine-readable narration source is [`video/narration.json`](../video/narration.json).
 
-## 0:00–0:22 — Founder context
+## 0:00–0:18 — The costly mistake and the product
 
-**Show:** Andrei’s founder card; no portrait or medical imagery. Keep the AI-voice disclosure visible on the card.
+**Show:** an incomplete source list receiving a false green, then the ProofRank promise.
 
-**On screen:**
+> Incomplete evidence can look complete—and make an SEO migration dangerous. ProofRank is a read-only pre-migration inspector: it reconciles search, analytics, CMS, sitemap, crawler, and saved HTML, then withholds priorities until the URL universe and active pages are proven.
 
-```text
-Andrei Zakharov
-Digital product builder
-13+ years · Growth · SEO · AI automation
-Codex helps me turn experience and ideas into working products—with less physical effort and more freedom to create.
-AI-generated voice · Script developed with Codex and approved by Andrei Zakharov
-```
+## 0:18–0:34 — Founder context
 
-**Narration:**
+**Show:** professional founder card; no medical imagery. Keep the AI-generated voice disclosure visible.
 
-> I’m Andrei Zakharov. For over thirteen years, I’ve built and grown online projects across marketing, SEO, and automation. I’m fully paralysed, so every click and correction has a physical cost. Codex helps me turn experience and new ideas into working software—with less physical effort and more creative freedom.
+> I’m Andrei Zakharov, an SEO and digital project specialist with thirteen-plus years of experience. I’m fully paralysed. Codex lowers the physical cost of turning experience and ideas into working systems, unlocking more of my professional and creative potential.
 
-## 0:22–0:33 — The risk
+## 0:34–0:43 — What the demo separates
 
-**Show:** `11 known URLs → 7 parsed → 63.64% coverage`. Stop a premature `ORPHAN` label.
+**Show:** Codex task card and deterministic Python boundary.
 
-**Narration:**
+> Two synthetic runs show the difference. Python computes the evidence; Codex with GPT-5.6 follows the skill and explains the decision.
 
-> An AI can sound certain after seeing only part of a website. On a live site, that can trigger risky changes. Confidence is not evidence.
+## 0:43–0:56 — False green
 
-## 0:33–0:45 — Product promise
+**Show:** the real incomplete dashboard; highlight active HTML `7/7`, then source identities `7/11`, then `WITHHOLD`.
 
-**Show:** `CONFIRMED · CANDIDATE · WITHHELD`.
+> First: seven of eleven expected identities, but every observed active page has HTML—seven of seven. That false green leaves four unclassified, so ProofRank returns WITHHOLD, not a cleanup plan.
 
-**Narration:**
+## 0:56–1:05 — Complete evidence
 
-> ProofRank is a read-only Codex plugin for SEO and web operations teams. It separates confirmed findings from candidates—and withholds site-wide conclusions when the crawl is incomplete.
+**Show:** the complete dashboard; highlight source `11/11`, active HTML `10/10`, and the owner/release decision.
 
-## 0:45–1:02 — Meaningful Codex and GPT-5.6 use
+> With all eleven identities, one confirmed terminal four-oh-four leaves ten active pages, all with usable HTML. The result: READY FOR HUMAN REVIEW.
 
-**Show:** The exact synthetic, read-only Codex task and the `audit-site-graph` Skill.
+## 1:05–1:17 — Guarded Release Contract
 
-**Narration:**
+**Show:** the Method tab and deterministic handoff boundary.
 
-> Inside Codex, I run the audit-site-graph skill on a synthetic eleven-page website. Here, Codex with GPT-5.6 follows the Skill’s safe local workflow and explains the result. Deterministic Python calculates the facts.
+> Decision dot JSON records both gates, blockers, and evidence hashes. The optional command-line gate returns exit two for WITHHOLD, zero for ready; neither authorizes a live change.
 
-## 1:02–1:19 — Incomplete evidence
+## 1:17–1:35 — Seven-language operational evidence
 
-**Show:** `63.64%`, failed gate, and withheld graph claims.
+**Show:** sanitized evidence cards: `5,376/5,376`, source status `YELLOW`, and `11,172` identities.
 
-**Narration:**
+> The public demo is synthetic. Private seven-language evidence showed five thousand three hundred seventy-six of five thousand three hundred seventy-six active pages with HTML, but source readiness stayed yellow, so the conclusion remained withheld. Reconciliation reached eleven thousand one hundred seventy-two identities.
 
-> First, only seven of eleven pages are parsed: sixty-three point six four per cent coverage. The gate fails. ProofRank withholds the orphan conclusion and graph-level opportunities. It stops where the evidence stops.
+## 1:35–1:47 — Separate guarded private workflow
 
-## 1:19–1:34 — Complete evidence
+**Show:** private apply → cache defect → rollback three files → repair → `442/442`, with an explicit public/private boundary.
 
-**Show:** `100%`, enabled gate, High filter, and evidence drawer.
+> A separate guarded private apply workflow—not ProofRank—caught a static-cache defect, rolled back three files, then after repair passed four hundred forty-two of four hundred forty-two pages with zero invalid emissions.
 
-**Narration:**
+## 1:47–1:55 — Second project
 
-> With the complete cache, coverage reaches one hundred per cent, and the gate passes. ProofRank surfaces confirmed technical issues and cautious candidates. I filter high-priority findings and inspect their evidence.
+**Show:** Torrevieja evidence card.
 
-## 1:34–1:42 — Safety boundary
+> Torrevieja checked three thousand five hundred ninety-eight paths; zero of three thousand ninety previously successful paths were lost.
 
-**Show:** Method tab and the read-only safety panel.
+## 1:55–2:05 — Modeled impact
 
-**Narration:**
+**Show:** `5–10 hours`, clearly labeled as a model rather than a benchmark.
 
-> The self-contained dashboard strips local paths, loads no external scripts, and performs no live-site writes.
+> At roughly three thousand identities, our model suggests five to ten specialist hours saved when exports exist. It is an estimate; review and implementation remain human.
 
-## 1:42–2:08 — Truthful Build Week boundary
+## 2:05–2:29 — What Codex and GPT-5.6 changed
 
-**Show:** `Earlier private workflow / previous Codex models → Build Week: Codex + GPT-5.6 → Ultra reasoning level → evidence gate → reusable plugin` plus QA checks.
+**Show:** false-green assumption → two evidence gates → deterministic handoff → public plugin.
 
-**Narration:**
+> Earlier Codex models supported the private workflows. During Build Week, GPT-5.6 exposed that one hundred percent observed HTML can hide an incomplete source universe. Codex helped implement adapters, two gates, terminal-URL semantics, decision JSON, exit codes, tests, dashboard, documentation, and the public plugin. Ultra reasoning reduced my correction cycles.
 
-> ProofRank grew from an earlier private workflow built with previous Codex models. During Build Week, Codex with GPT-5.6 helped turn those lessons into a reusable plugin. I used GPT-5.6 at the Ultra reasoning level to implement and test this reproducible evidence-gate extension. Codex also ran validators, secret scans, and desktop and mobile checks.
+## 2:29–2:40 — Close
 
-## 2:08–2:22 — Real scale
+**Show:** final ProofRank promise and the no-rebuild testing path.
 
-**Show:** 11-URL synthetic public demo beside the earlier private workflow: `3,137 URLs · 99.87% HTML coverage`.
+> Judges can run both samples without rebuilding. ProofRank does not replace human judgment. It enforces one safety rule: no ranking without complete evidence.
 
-**Narration:**
+## Verified production facts
 
-> The public demo is synthetic. An earlier private workflow processed three thousand one hundred and thirty-seven URLs at ninety-nine point eight seven per cent HTML coverage—and informed ProofRank’s design.
-
-## 2:22–2:44 — Close
-
-**Show:** `Less energy translating intent. More freedom to create.` and `Reproducible public demo in the repository`.
-
-**Narration:**
-
-> Better models mean fewer correction cycles for me. Good automation should reduce correction work, not create more. ProofRank applies that principle to AI: when evidence is incomplete, the gate stops a confident mistake. I spend less energy translating intent—and have more freedom to turn ideas into products.
-
-## Final export checklist
-
-- Keep the final video below 3:00; the reviewed final story cut is 2:43.702.
-- Use the approved first-person phrase `I’m fully paralysed` as product context, not pity framing.
-- Keep the AI-generated voice disclosure visible on the founder card.
-- Burn exactly one accurate English subtitle layer into the MP4.
-- Do not place or upload a same-basename `.srt`; local players may auto-load it and duplicate the burned captions.
-- Mention Codex and GPT-5.6 in audio; describe Ultra once as the reasoning setting used for the extension.
-- Show only synthetic public data; do not expose private paths, accounts, or case-study inputs.
-- Upload or publish nothing until Andrei approves the final local MP4.
+- Final duration: `160.737` seconds, below the three-minute limit.
+- Video: H.264, 1920×1080, 30 fps.
+- Audio: AAC, 48 kHz stereo, normalized during final assembly.
+- Full captions are not burned into the MP4; one accurate English SRT is generated for YouTube.
+- The approved phrase `I’m fully paralysed` appears once, after professional positioning.
+- The private apply/rollback system is labeled as separate from public, read-only ProofRank in both audio and visuals.
+- Only synthetic public product inputs appear on screen; private metrics are sanitized aggregates.

@@ -24,10 +24,21 @@ from pathlib import Path
 
 USER_AGENT = "ProofRankSiteGraphAudit/0.1 (+read-only)"
 MAX_RESPONSE_BYTES = 3_000_000
+MAX_SITEMAP_BYTES = 10_000_000
 TOKEN_RE = re.compile(r"[^\W_]+(?:['’\-][^\W_]+)*", re.UNICODE)
 PERCENT_RE = re.compile(r"%[0-9A-Fa-f]{2}")
 URL_FIELDS = ("url", "permalink", "page", "path", "finalUrl", "final_url")
 HTML_FIELDS = ("html", "body", "rendered_html")
+HTML_COMPLETE_FIELDS = (
+    "html_complete", "htmlComplete", "full_html", "fullHtml", "body_complete", "bodyComplete",
+)
+SOURCE_READY_STATUSES = {"collected", "complete", "included", "loaded", "resolved"}
+NON_PAGE_LINK_SUFFIXES = {
+    ".7z", ".avi", ".css", ".doc", ".docx", ".eot", ".gif", ".gz", ".ico", ".jpeg", ".jpg",
+    ".js", ".json", ".map", ".mov", ".mp3", ".mp4", ".mpeg", ".ogg", ".otf", ".pdf", ".png",
+    ".rar", ".svg", ".tar", ".tif", ".tiff", ".ttf", ".wav", ".webm", ".webp", ".woff", ".woff2",
+    ".xls", ".xlsx", ".xml", ".zip",
+}
 
 STOPWORDS = {
     # Russian
@@ -145,6 +156,53 @@ def same_site(url: str, site: str) -> bool:
     return bool(left and left == right)
 
 
+def origin_tuple(value: str) -> tuple[str, str, int | None]:
+    parsed = urllib.parse.urlsplit(value)
+    scheme = parsed.scheme.lower()
+    host = (parsed.hostname or "").lower()
+    port = parsed.port
+    if port is None:
+        port = 443 if scheme == "https" else 80 if scheme == "http" else None
+    return scheme, host, port
+
+
+def same_origin(left: str, right: str) -> bool:
+    return origin_tuple(left) == origin_tuple(right) and bool(origin_tuple(left)[1])
+
+
+class SameOriginRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Reject redirects that leave the exact approved scheme/host/port."""
+
+    def __init__(self, approved_origin: str):
+        super().__init__()
+        self.approved_origin = approved_origin
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        target = urllib.parse.urljoin(req.full_url, newurl)
+        if not same_origin(target, self.approved_origin):
+            raise PermissionError(f"Cross-origin redirect blocked: {target}")
+        return super().redirect_request(req, fp, code, msg, headers, target)
+
+
+def open_same_origin(url: str, site: str):
+    if not same_origin(url, site):
+        raise PermissionError(f"URL is outside the approved origin: {url}")
+    opener = urllib.request.build_opener(SameOriginRedirectHandler(site))
+    response = opener.open(urllib.request.Request(url, headers={"User-Agent": USER_AGENT}), timeout=30)
+    if not same_origin(response.geturl(), site):
+        response.close()
+        raise PermissionError(f"Final URL is outside the approved origin: {response.geturl()}")
+    return response
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def tokenize(text: str) -> list[str]:
     normalized = unicodedata.normalize("NFKC", str(text or "")).lower()
     return [token for token in TOKEN_RE.findall(normalized) if len(token) > 1 and token not in STOPWORDS]
@@ -163,6 +221,12 @@ def clean_signal_text(value: str) -> str:
     if len(PERCENT_RE.findall(value)) >= 2:
         return ""
     return value
+
+
+def is_page_like_url(url: str) -> bool:
+    """Exclude obvious same-origin assets from the page-identity universe."""
+    suffix = Path(urllib.parse.urlsplit(url).path).suffix.lower()
+    return suffix not in NON_PAGE_LINK_SUFFIXES
 
 
 def infer_lane(url: str, supplied: str = "", post_type: str = "") -> str:
@@ -471,6 +535,237 @@ def load_inventory(path: str, site: str, known: dict):
     return {"path": source, "rows": len(rows), "accepted": accepted}
 
 
+def empty_source_universe(observed_normalized_identities: int = 0) -> dict:
+    """A missing manifest cannot prove the URL source universe is complete."""
+    return {
+        "declared": False,
+        "path": None,
+        "sha256": None,
+        "version": None,
+        "site": None,
+        "site_matches": False,
+        "inventory_binding_complete": False,
+        "page_cache_binding_complete": False,
+        "sitemap_binding_complete": False,
+        "input_binding_complete": False,
+        "universe_declared_complete": False,
+        "required_sources_complete": False,
+        "source_universe_complete": False,
+        "required_source_count": 0,
+        "required_sources_incomplete": [],
+        "expected_normalized_identities": None,
+        "observed_normalized_identities": observed_normalized_identities,
+        "identity_count_matches": None,
+        "gate_reasons": ["source manifest was not declared"],
+        "sources": [],
+    }
+
+
+def load_source_manifest(
+    path: str,
+    expected_site: str = "",
+    inventory_paths: list[str] | None = None,
+    page_cache_path: str | None = None,
+    sitemap_hashes: list[str] | None = None,
+    observed_normalized_identities: int = 0,
+) -> dict:
+    """Load and bind a local provenance declaration to the audited site and evidence files."""
+    manifest_path = Path(path).resolve()
+    body = manifest_path.read_bytes()
+    data = json.loads(body.decode("utf-8-sig"))
+    if not isinstance(data, dict):
+        raise ValueError("Source manifest must be a JSON object")
+
+    raw_sources = data.get("sources", [])
+    if isinstance(raw_sources, dict):
+        expanded = []
+        for source_id, value in raw_sources.items():
+            entry = dict(value or {}) if isinstance(value, dict) else {"status": value}
+            entry.setdefault("id", source_id)
+            expanded.append(entry)
+        raw_sources = expanded
+    if not isinstance(raw_sources, list):
+        raise ValueError("Source manifest 'sources' must be a list or object")
+
+    sources = []
+    seen_ids = set()
+    for index, raw in enumerate(raw_sources, start=1):
+        if not isinstance(raw, dict):
+            raise ValueError(f"Source manifest entry {index} must be an object")
+        source_id = str(raw.get("id") or raw.get("name") or f"source-{index}").strip()
+        if source_id in seen_ids:
+            raise ValueError(f"Duplicate source manifest id: {source_id}")
+        seen_ids.add(source_id)
+        status = str(raw.get("status") or "unspecified").strip().lower().replace("_", "-")
+        required = boolish(raw.get("required"))
+        entry = {
+            "id": source_id,
+            "kind": str(raw.get("kind") or raw.get("type") or "unspecified").strip(),
+            "required": required,
+            "status": status,
+        }
+        for key in ("path", "location", "records", "sha256", "reason", "note"):
+            if raw.get(key) not in (None, ""):
+                entry[key] = raw[key]
+        sources.append(entry)
+
+    declared_value = data.get("universe_complete")
+    if declared_value is None:
+        declared_value = data.get("source_universe_complete")
+    universe_declared_complete = boolish(declared_value) if declared_value is not None else False
+    incomplete = [
+        {
+            "id": source["id"],
+            "kind": source["kind"],
+            "status": source["status"],
+            **({"reason": source["reason"]} if source.get("reason") else {}),
+        }
+        for source in sources
+        if source["required"] and source["status"] not in SOURCE_READY_STATUSES
+    ]
+    required_source_count = sum(1 for source in sources if source["required"])
+    required_sources_complete = bool(required_source_count) and not incomplete
+
+    expected_normalized_identities = data.get("expected_normalized_identities")
+    if expected_normalized_identities is not None:
+        if isinstance(expected_normalized_identities, bool):
+            raise ValueError("expected_normalized_identities must be a non-negative integer")
+        try:
+            parsed_expected_identities = int(expected_normalized_identities)
+        except (TypeError, ValueError) as error:
+            raise ValueError("expected_normalized_identities must be a non-negative integer") from error
+        if (
+            parsed_expected_identities < 0
+            or str(expected_normalized_identities).strip() != str(parsed_expected_identities)
+        ):
+            raise ValueError("expected_normalized_identities must be a non-negative integer")
+        expected_normalized_identities = parsed_expected_identities
+    identity_count_matches = (
+        None
+        if expected_normalized_identities is None
+        else observed_normalized_identities == expected_normalized_identities
+    )
+
+    manifest_site_raw = str(data.get("site") or "").strip()
+    manifest_site_parts = urllib.parse.urlsplit(manifest_site_raw)
+    manifest_site_is_absolute = bool(
+        manifest_site_parts.scheme in {"http", "https"} and manifest_site_parts.hostname
+    )
+    manifest_site = (
+        normalize_url(manifest_site_raw, manifest_site_raw)
+        if manifest_site_is_absolute else ""
+    )
+    site_matches = bool(expected_site and manifest_site and same_origin(manifest_site, expected_site))
+
+    raw_outputs = data.get("outputs") if isinstance(data.get("outputs"), dict) else {}
+
+    def declared_hashes(value) -> list[str]:
+        items = value if isinstance(value, list) else [value]
+        hashes = []
+        for item in items:
+            if isinstance(item, str):
+                item = {"path": item}
+            if not isinstance(item, dict):
+                continue
+            digest = str(item.get("sha256") or "").strip().lower()
+            if re.fullmatch(r"[0-9a-f]{64}", digest):
+                hashes.append(digest)
+        return hashes
+
+    inventory_output = raw_outputs.get("inventories", raw_outputs.get("inventory"))
+    expected_inventory_hashes = declared_hashes(inventory_output)
+    supplied_inventory_hashes = [
+        file_sha256(Path(value)).lower()
+        for value in inventory_paths or []
+        if Path(value).is_file()
+    ]
+    inventory_binding_complete = bool(
+        expected_inventory_hashes
+        and Counter(expected_inventory_hashes) == Counter(supplied_inventory_hashes)
+    )
+
+    expected_page_cache_hashes = declared_hashes(raw_outputs.get("page_cache"))
+    supplied_page_cache_hashes = []
+    if page_cache_path and Path(page_cache_path).is_file():
+        supplied_page_cache_hashes.append(file_sha256(Path(page_cache_path)).lower())
+    page_cache_binding_complete = (
+        Counter(expected_page_cache_hashes) == Counter(supplied_page_cache_hashes)
+        if expected_page_cache_hashes or supplied_page_cache_hashes
+        else True
+    )
+    expected_sitemap_hashes = declared_hashes(raw_outputs.get("sitemaps", raw_outputs.get("sitemap")))
+    supplied_sitemap_hashes = [
+        str(value).strip().lower()
+        for value in sitemap_hashes or []
+        if re.fullmatch(r"[0-9a-fA-F]{64}", str(value).strip())
+    ]
+    required_sitemap_source = any(
+        source["required"]
+        and source["kind"].strip().lower() == "sitemap"
+        and source["status"] in SOURCE_READY_STATUSES
+        for source in sources
+    )
+    if required_sitemap_source:
+        sitemap_binding_complete = bool(
+            expected_sitemap_hashes
+            and Counter(expected_sitemap_hashes) == Counter(supplied_sitemap_hashes)
+        )
+    else:
+        sitemap_binding_complete = (
+            Counter(expected_sitemap_hashes) == Counter(supplied_sitemap_hashes)
+            if expected_sitemap_hashes or supplied_sitemap_hashes
+            else True
+        )
+    input_binding_complete = (
+        inventory_binding_complete and page_cache_binding_complete and sitemap_binding_complete
+    )
+
+    gate_reasons = []
+    if not universe_declared_complete:
+        gate_reasons.append("source universe was not explicitly declared complete")
+    if not sources:
+        gate_reasons.append("manifest contains no source rows")
+    if not required_source_count:
+        gate_reasons.append("manifest contains no required source rows")
+    if incomplete:
+        gate_reasons.append("one or more required source rows are not collected")
+    if not site_matches:
+        gate_reasons.append("manifest site does not match the audited origin")
+    if not inventory_binding_complete:
+        gate_reasons.append("manifest inventory hash set does not exactly match the supplied inventories")
+    if not page_cache_binding_complete:
+        gate_reasons.append("manifest page-cache hash does not match the supplied page cache")
+    if not sitemap_binding_complete:
+        gate_reasons.append("manifest sitemap hash set does not exactly match the resolved sitemap inputs")
+    if identity_count_matches is False:
+        gate_reasons.append(
+            "observed normalized source identity count does not match expected_normalized_identities"
+        )
+    source_universe_complete = not gate_reasons
+    return {
+        "declared": True,
+        "path": str(manifest_path),
+        "sha256": hashlib.sha256(body).hexdigest(),
+        "version": data.get("version"),
+        "site": manifest_site or None,
+        "site_matches": site_matches,
+        "inventory_binding_complete": inventory_binding_complete,
+        "page_cache_binding_complete": page_cache_binding_complete,
+        "sitemap_binding_complete": sitemap_binding_complete,
+        "input_binding_complete": input_binding_complete,
+        "universe_declared_complete": universe_declared_complete,
+        "required_sources_complete": required_sources_complete,
+        "source_universe_complete": source_universe_complete,
+        "required_source_count": required_source_count,
+        "required_sources_incomplete": incomplete,
+        "expected_normalized_identities": expected_normalized_identities,
+        "observed_normalized_identities": observed_normalized_identities,
+        "identity_count_matches": identity_count_matches,
+        "gate_reasons": gate_reasons,
+        "sources": sources,
+    }
+
+
 def read_bytes(source: str, allow_network: bool, site: str, local_parent: Path | None = None):
     parsed = urllib.parse.urlsplit(source)
     if parsed.scheme in {"http", "https"}:
@@ -482,9 +777,11 @@ def read_bytes(source: str, allow_network: bool, site: str, local_parent: Path |
             raise PermissionError(f"Network disabled for {source}")
         if not same_site(source, site):
             raise PermissionError(f"Cross-host sitemap blocked: {source}")
-        request = urllib.request.Request(source, headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(request, timeout=30) as response:
-            return response.read(10_000_000), response.geturl(), None
+        with open_same_origin(source, site) as response:
+            body = response.read(MAX_SITEMAP_BYTES + 1)
+            if len(body) > MAX_SITEMAP_BYTES:
+                raise ValueError(f"Sitemap exceeds {MAX_SITEMAP_BYTES} bytes")
+            return body, response.geturl(), None
     path = Path(source)
     if not path.is_absolute() and local_parent:
         path = local_parent / path
@@ -495,6 +792,7 @@ def load_sitemaps(sources: list[str], site: str, allow_network: bool):
     urls = set()
     visited = set()
     resolved = []
+    hashes = []
     unresolved = []
 
     def visit(source: str, parent: Path | None = None):
@@ -506,19 +804,35 @@ def load_sitemaps(sources: list[str], site: str, allow_network: bool):
             body, resolved_source, local_parent = read_bytes(source, allow_network, site, parent)
             root = ET.fromstring(body)
             resolved.append(resolved_source)
+            hashes.append(hashlib.sha256(body).hexdigest())
         except Exception as exc:
             unresolved.append({"source": identity, "error": str(exc)})
             return
-        kind = root.tag.rsplit("}", 1)[-1].lower()
-        locs = []
-        for element in root.iter():
-            if element.tag.rsplit("}", 1)[-1].lower() == "loc" and element.text:
-                locs.append(element.text.strip())
+        def tag_parts(tag: str) -> tuple[str, str]:
+            if tag.startswith("{") and "}" in tag:
+                namespace, local_name = tag[1:].split("}", 1)
+                return namespace, local_name.lower()
+            return "", tag.lower()
+
+        root_namespace, kind = tag_parts(root.tag)
+
+        def direct_locs(container_name: str) -> list[str]:
+            values = []
+            for container in list(root):
+                namespace, local_name = tag_parts(container.tag)
+                if namespace != root_namespace or local_name != container_name:
+                    continue
+                for element in list(container):
+                    namespace, local_name = tag_parts(element.tag)
+                    if namespace == root_namespace and local_name == "loc" and element.text:
+                        values.append(element.text.strip())
+            return values
+
         if kind == "sitemapindex":
-            for child in locs:
+            for child in direct_locs("sitemap"):
                 visit(child, local_parent)
         elif kind == "urlset":
-            for value in locs:
+            for value in direct_locs("url"):
                 url = normalize_url(value, site)
                 if url and same_site(url, site):
                     urls.add(url)
@@ -530,6 +844,7 @@ def load_sitemaps(sources: list[str], site: str, allow_network: bool):
     return {
         "urls": urls,
         "resolved": resolved,
+        "hashes": hashes,
         "unresolved": unresolved,
     }
 
@@ -537,6 +852,7 @@ def load_sitemaps(sources: list[str], site: str, allow_network: bool):
 def load_page_cache(path: str, site: str):
     with open(path, encoding="utf-8") as handle:
         data = json.load(handle)
+    default_html_complete = boolish(data.get("html_complete")) if isinstance(data, dict) else False
     if isinstance(data, list):
         collection = data
     elif isinstance(data, dict):
@@ -560,34 +876,41 @@ def load_page_cache(path: str, site: str):
         if not url or not same_site(url, site):
             continue
         html = first_value(row, HTML_FIELDS)
+        html_complete_raw = first_value(row, HTML_COMPLETE_FIELDS)
         pages[url] = {
             "url": url,
             "status": int(numeric(row.get("status"), 0)),
             "final_url": normalize_url(row.get("final_url") or row.get("finalUrl") or url, site),
             "html": html,
+            "html_complete": boolish(html_complete_raw) if html_complete_raw else default_html_complete,
+            "truncated": boolish(row.get("truncated")),
+            "conflicting_snapshots": boolish(row.get("conflicting_snapshots")),
             "source": str(Path(path).resolve()),
         }
     return pages
 
 
 def fetch_page(url: str, site: str):
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with open_same_origin(url, site) as response:
             content_type = response.headers.get("Content-Type", "")
-            body = response.read(MAX_RESPONSE_BYTES)
+            body = response.read(MAX_RESPONSE_BYTES + 1)
+            truncated = len(body) > MAX_RESPONSE_BYTES
+            body = body[:MAX_RESPONSE_BYTES]
             html = body.decode("utf-8", errors="replace") if "html" in content_type.lower() else ""
             return {
                 "url": url,
                 "status": int(response.status),
                 "final_url": normalize_url(response.geturl(), site),
                 "html": html,
+                "html_complete": bool(html) and not truncated,
+                "truncated": truncated,
                 "source": "approved_live_get",
             }
     except urllib.error.HTTPError as exc:
-        return {"url": url, "status": int(exc.code), "final_url": url, "html": "", "source": "approved_live_get"}
+        return {"url": url, "status": int(exc.code), "final_url": url, "html": "", "html_complete": False, "truncated": False, "source": "approved_live_get"}
     except Exception as exc:
-        return {"url": url, "status": 0, "final_url": url, "html": "", "source": "approved_live_get", "error": str(exc)}
+        return {"url": url, "status": 0, "final_url": url, "html": "", "html_complete": False, "truncated": False, "source": "approved_live_get", "error": str(exc)}
 
 
 def crawl_pages(urls: list[str], site: str, max_pages: int, delay_ms: int):
@@ -618,12 +941,33 @@ def parse_cached_pages(cache: dict, known: dict, site: str, findings: list):
         record = known.get(url, {})
         status = int(cached.get("status") or 0)
         html = cached.get("html") or ""
+        final_url = cached.get("final_url") or url
+        truncated = bool(cached.get("truncated"))
+        conflicting_snapshots = bool(cached.get("conflicting_snapshots"))
+        html_complete = bool(cached.get("html_complete"))
+        identity_redirect = bool(final_url and normalize_url(final_url, site) != url)
+        same_origin_identity_redirect = bool(identity_redirect and same_origin(final_url, site))
+        html_usable = bool(
+            html
+            and html_complete
+            and 200 <= status < 300
+            and same_origin(final_url, site)
+            and not identity_redirect
+            and not truncated
+            and not conflicting_snapshots
+        )
         analysis = {
             "url": url,
             "path": url_path(url),
             "status": status,
-            "final_url": cached.get("final_url") or url,
-            "html_available": bool(html),
+            "final_url": final_url,
+            "html_available": html_usable,
+            "html_present": bool(html),
+            "html_complete": html_complete,
+            "html_truncated": truncated,
+            "conflicting_snapshots": conflicting_snapshots,
+            "identity_redirect": identity_redirect,
+            "same_origin_identity_redirect": same_origin_identity_redirect,
             "title": record.get("title", ""),
             "h1": record.get("h1", ""),
             "canonical": "",
@@ -639,8 +983,8 @@ def parse_cached_pages(cache: dict, known: dict, site: str, findings: list):
             "schema_blocks": 0,
             "tokens": [],
         }
-        if html:
-            parser = PageParser(cached.get("final_url") or url)
+        if html_usable:
+            parser = PageParser(final_url)
             try:
                 parser.feed(html)
             except Exception as exc:
@@ -700,6 +1044,31 @@ def parse_cached_pages(cache: dict, known: dict, site: str, findings: list):
     return analyses, links, schema_counts
 
 
+def reconcile_discovered_page_identities(known: dict, analyses: dict, links: list, site: str) -> dict[str, list[str]]:
+    """Add page-like identities revealed by parsed evidence before coverage is computed."""
+    discovered = defaultdict(set)
+    for link in links:
+        target = link.get("target")
+        if target and same_origin(target, site) and is_page_like_url(target) and target not in known:
+            discovered[target].add("internal_link")
+    for url, page in analyses.items():
+        final_url = page.get("final_url")
+        if (
+            page.get("identity_redirect")
+            and final_url
+            and same_origin(final_url, site)
+            and is_page_like_url(final_url)
+            and final_url not in known
+        ):
+            discovered[final_url].add("redirect_final_url")
+        canonical = page.get("canonical")
+        if canonical and same_origin(canonical, site) and is_page_like_url(canonical) and canonical not in known:
+            discovered[canonical].add("canonical")
+    for url, evidence_types in discovered.items():
+        merge_record(known, url, {}, "discovered:" + ",".join(sorted(evidence_types)), site)
+    return {url: sorted(evidence_types) for url, evidence_types in sorted(discovered.items())}
+
+
 def build_graph(known: dict, analyses: dict, links: list, site: str, graph_complete: bool, findings: list):
     inbound = Counter()
     inbound_content = Counter()
@@ -720,8 +1089,28 @@ def build_graph(known: dict, analyses: dict, links: list, site: str, graph_compl
         target_page = analyses.get(target)
         if target_page:
             status = target_page.get("status", 0)
-            if status == 0 or status >= 400:
+            if status >= 400:
                 add_finding(findings, "broken_internal_link", "high", "confirmed", source=source, target=target, evidence=f"cached status={status}")
+            elif target_page.get("identity_redirect") or 300 <= status < 400:
+                add_finding(
+                    findings,
+                    "link_to_redirect",
+                    "medium",
+                    "confirmed",
+                    source=source,
+                    target=target,
+                    evidence=f"cached status={status}; final_url={target_page.get('final_url') or 'unknown'}",
+                )
+            elif status == 0:
+                add_finding(
+                    findings,
+                    "link_target_unverified",
+                    "info",
+                    "withheld",
+                    source=source,
+                    target=target,
+                    evidence="target exists in the cache, but no HTTP status was supplied",
+                )
             if target_page.get("noindex"):
                 add_finding(findings, "link_to_noindex", "medium", "confirmed", source=source, target=target, evidence="target meta robots contains noindex")
             canonical = target_page.get("canonical")
@@ -906,7 +1295,9 @@ def link_opportunities(known: dict, analyses: dict, inbound_content: Counter, ob
 
 def csv_value(value):
     if isinstance(value, (dict, list, tuple, set)):
-        return json.dumps(list(value) if isinstance(value, set) else value, ensure_ascii=False, sort_keys=True)
+        value = json.dumps(list(value) if isinstance(value, set) else value, ensure_ascii=False, sort_keys=True)
+    if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@")):
+        return "'" + value
     return value
 
 
@@ -924,6 +1315,112 @@ def finding_url(finding: dict) -> str:
     return finding.get("url") or finding.get("target") or finding.get("source") or ", ".join(finding.get("urls", [])[:2])
 
 
+def content_gate_passes(
+    graph_eligible_total: int,
+    html_pages: int,
+    homepage_parsed: bool,
+    unresolved_sitemaps: int,
+) -> bool:
+    """Require full active-page evidence; 99.87% is deliberately not 100%."""
+    return bool(
+        graph_eligible_total
+        and html_pages == graph_eligible_total
+        and homepage_parsed
+        and not unresolved_sitemaps
+    )
+
+
+def build_release_contract(
+    source_universe: dict,
+    coverage: dict,
+    evidence_hashes: dict,
+) -> dict:
+    """Return a deterministic read-only gate, never authorization for a live change."""
+    blocker_codes = []
+
+    def block(code: str, condition: bool) -> None:
+        if condition and code not in blocker_codes:
+            blocker_codes.append(code)
+
+    declared = bool(source_universe.get("declared"))
+    block("SOURCE_MANIFEST_MISSING", not declared)
+    if declared:
+        block("SOURCE_ROWS_MISSING", not source_universe.get("sources"))
+        block(
+            "SOURCE_UNIVERSE_NOT_DECLARED_COMPLETE",
+            not source_universe.get("universe_declared_complete"),
+        )
+        block("REQUIRED_SOURCES_MISSING", not source_universe.get("required_source_count"))
+        block(
+            "REQUIRED_SOURCES_INCOMPLETE",
+            bool(source_universe.get("required_source_count"))
+            and not source_universe.get("required_sources_complete"),
+        )
+        block("SOURCE_SITE_MISMATCH", not source_universe.get("site_matches"))
+        block("INVENTORY_HASH_MISMATCH", not source_universe.get("inventory_binding_complete"))
+        block("PAGE_CACHE_HASH_MISMATCH", not source_universe.get("page_cache_binding_complete"))
+        block("SITEMAP_HASH_MISMATCH", not source_universe.get("sitemap_binding_complete"))
+        block(
+            "SOURCE_IDENTITY_COUNT_MISMATCH",
+            source_universe.get("identity_count_matches") is False,
+        )
+        block(
+            "SOURCE_UNIVERSE_CONTRADICTED",
+            bool(source_universe.get("discovered_identity_count")),
+        )
+
+    block("NO_ACTIVE_IDENTITIES", not coverage["graph_eligible_urls"])
+    block(
+        "ACTIVE_HTML_INCOMPLETE",
+        coverage["html_pages"] != coverage["graph_eligible_urls"],
+    )
+    block("HOMEPAGE_HTML_MISSING", not coverage["homepage_parsed"])
+    block("UNRESOLVED_SITEMAPS", bool(coverage["unresolved_sitemaps"]))
+
+    expected = source_universe.get("expected_normalized_identities")
+    classification_target = max(
+        coverage["known_urls"],
+        expected if isinstance(expected, int) else source_universe.get("observed_normalized_identities", 0),
+    )
+    classified_count = coverage["html_pages"] + coverage["resolved_non_graph_urls"]
+    unclassified_count = max(0, classification_target - classified_count)
+    release_gate_passed = bool(coverage["graph_complete"])
+    return {
+        "schema_version": "1.0",
+        "decision": "READY_FOR_HUMAN_REVIEW" if release_gate_passed else "WITHHOLD",
+        "release_gate_passed": release_gate_passed,
+        "live_change_authorized": False,
+        "stages": {
+            "source_universe": {
+                "passed": bool(coverage["source_universe_complete"]),
+                "observed_normalized_identities": source_universe.get(
+                    "observed_normalized_identities", 0
+                ),
+                "expected_normalized_identities": expected,
+                "identity_count_matches": source_universe.get("identity_count_matches"),
+            },
+            "active_html": {
+                "passed": bool(coverage["content_graph_complete"]),
+                "eligible_identities": coverage["graph_eligible_urls"],
+                "full_html_identities": coverage["html_pages"],
+                "confirmed_terminal_identities": coverage["resolved_non_graph_urls"],
+                "coverage": coverage["html_coverage"],
+                "required_coverage": 1.0,
+                "homepage_parsed": bool(coverage["homepage_parsed"]),
+                "unresolved_sitemaps": coverage["unresolved_sitemaps"],
+            },
+            "final": {"passed": release_gate_passed},
+        },
+        "unclassified_count": unclassified_count,
+        "blocker_codes": blocker_codes,
+        "evidence_hashes": evidence_hashes,
+        "decision_boundary": (
+            "Read-only evidence result. READY_FOR_HUMAN_REVIEW does not authorize, apply, "
+            "or roll back any live change."
+        ),
+    }
+
+
 def build_report(audit: dict) -> str:
     coverage = audit["coverage"]
     counts = audit["finding_counts"]
@@ -938,7 +1435,7 @@ def build_report(audit: dict) -> str:
     if coverage["graph_complete"]:
         lines.append("The parsed internal-link graph passed the completeness gate. URL actions remain candidates until page mechanisms and search evidence are verified.")
     else:
-        lines.append("The graph is incomplete. ProofRank withholds orphan, click-depth, link-opportunity, schema-coverage, and body-duplicate conclusions where inputs are insufficient.")
+        lines.append("The graph is incomplete. ProofRank withholds topology-dependent orphan, click-depth, reachability, and internal-link-opportunity conclusions where inputs are insufficient.")
     lines += [
         "",
         "## Coverage",
@@ -946,13 +1443,22 @@ def build_report(audit: dict) -> str:
         "| Metric | Value |",
         "|---|---:|",
         f"| Known normalized URLs | {coverage['known_urls']} |",
+        f"| Active graph-eligible URLs | {coverage['graph_eligible_urls']} |",
+        f"| Resolved redirect / gone URLs | {coverage['resolved_non_graph_urls']} |",
         f"| URLs marked as sitemap entries | {coverage['sitemap_urls']} |",
         f"| Cache / GET records | {coverage['page_records']} |",
         f"| URLs with parsed HTML | {coverage['html_pages']} |",
         f"| HTML coverage | {coverage['html_coverage']:.2%} |",
         f"| Unresolved child sitemaps | {coverage['unresolved_sitemaps']} |",
         f"| Homepage parsed | {'yes' if coverage['homepage_parsed'] else 'no'} |",
-        f"| Graph complete | {'yes' if coverage['graph_complete'] else 'no'} |",
+        f"| Source universe explicitly declared | {'yes' if coverage['universe_declared_complete'] else 'no'} |",
+        f"| Manifest site matches audit | {'yes' if coverage['source_site_matches'] else 'no'} |",
+        f"| Manifest inventory hash set bound | {'yes' if coverage['source_inventory_binding_complete'] else 'no'} |",
+        f"| Supplied HTML-cache hash bound | {'yes' if coverage['source_page_cache_binding_complete'] else 'no'} |",
+        f"| Resolved sitemap hash set bound | {'yes' if coverage['source_sitemap_binding_complete'] else 'no'} |",
+        f"| Source-universe gate passed | {'yes' if coverage['source_universe_complete'] else 'no'} |",
+        f"| Observed-content coverage gate passed | {'yes' if coverage['content_graph_complete'] else 'no'} |",
+        f"| Final whole-site graph gate passed | {'yes' if coverage['graph_complete'] else 'no'} |",
         "",
         "## Findings",
         "",
@@ -980,6 +1486,7 @@ def build_report(audit: dict) -> str:
         "## Output files",
         "",
         "- `audit.json`",
+        "- `decision.json`",
         "- `pages.csv`",
         "- `links.csv`",
         "- `findings.csv`",
@@ -993,17 +1500,28 @@ def main(argv=None):
     parser.add_argument("--inventory", action="append", default=[], help="CSV or JSON inventory; repeatable")
     parser.add_argument("--page-cache", help="Saved JSON page cache with rendered HTML")
     parser.add_argument("--sitemap", action="append", default=[], help="Local XML or approved URL; repeatable")
+    parser.add_argument("--source-manifest", help="Local JSON declaration of source provenance and required-source completeness")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--crawl", action="store_true", help="Fetch seed URLs using read-only GET")
     parser.add_argument("--allow-network", action="store_true", help="Explicitly enable network reads")
     parser.add_argument("--max-pages", type=int, default=100, help="Network page limit; 0 means all seeds")
     parser.add_argument("--delay-ms", type=int, default=250)
     parser.add_argument("--save-cache", action="store_true")
-    parser.add_argument("--complete-threshold", type=float, default=0.95)
+    parser.add_argument(
+        "--complete-threshold",
+        type=float,
+        default=1.0,
+        help="Required active-page HTML coverage for topology claims; safety policy requires 1.0",
+    )
     parser.add_argument("--near-duplicate-threshold", type=float, default=0.82)
     parser.add_argument("--cannibalization-threshold", type=float, default=0.62)
     parser.add_argument("--max-pairs", type=int, default=5000)
     parser.add_argument("--brand-term", action="append", default=[], help="Brand or location term to exclude from overlap signals; repeatable")
+    parser.add_argument(
+        "--gate-exit-code",
+        action="store_true",
+        help="Return 2 when the read-only release gate withholds; default report generation returns 0",
+    )
     args = parser.parse_args(argv)
 
     for term in args.brand_term:
@@ -1014,8 +1532,11 @@ def main(argv=None):
         parser.error("--crawl requires --allow-network")
     if any(urllib.parse.urlsplit(source).scheme in {"http", "https"} for source in args.sitemap) and not args.allow_network:
         parser.error("remote --sitemap requires --allow-network")
-    if not 0 < args.complete_threshold <= 1:
-        parser.error("--complete-threshold must be in (0, 1]")
+    if args.complete_threshold != 1.0:
+        parser.error(
+            "--complete-threshold must be 1.0: orphan, reachability, click-depth, and "
+            "link-opportunity claims require every active graph-eligible URL"
+        )
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1024,7 +1545,25 @@ def main(argv=None):
     for inventory in args.inventory:
         input_manifest.append(load_inventory(inventory, site, known))
 
-    sitemap_data = load_sitemaps(args.sitemap, site, args.allow_network) if args.sitemap else {"urls": set(), "resolved": [], "unresolved": []}
+    sitemap_data = (
+        load_sitemaps(args.sitemap, site, args.allow_network)
+        if args.sitemap else {"urls": set(), "resolved": [], "hashes": [], "unresolved": []}
+    )
+    observed_source_identities = {
+        url for url in set(known) | set(sitemap_data["urls"])
+        if is_page_like_url(url)
+    }
+    source_universe = (
+        load_source_manifest(
+            args.source_manifest,
+            expected_site=site,
+            inventory_paths=args.inventory,
+            page_cache_path=args.page_cache,
+            sitemap_hashes=sitemap_data["hashes"],
+            observed_normalized_identities=len(observed_source_identities),
+        )
+        if args.source_manifest else empty_source_universe(len(observed_source_identities))
+    )
     for url in sorted(sitemap_data["urls"]):
         merge_record(known, url, {"inSitemap": True}, "sitemap", site)
 
@@ -1046,13 +1585,90 @@ def main(argv=None):
 
     findings = []
     analyses, links, schema_counts = parse_cached_pages(cache, known, site, findings)
+    discovered_identities = reconcile_discovered_page_identities(known, analyses, links, site)
+    if discovered_identities:
+        source_universe["source_universe_complete"] = False
+        source_universe.setdefault("gate_reasons", []).append(
+            f"{len(discovered_identities)} page-like identities were discovered outside the declared source universe"
+        )
+        source_universe["discovered_identity_count"] = len(discovered_identities)
+        add_finding(
+            findings,
+            "source_universe_contradicted",
+            "high",
+            "withheld",
+            evidence=(
+                f"{len(discovered_identities)} undeclared page-like identities were found in internal links, "
+                "same-origin redirect destinations, or canonicals; sample="
+                + ", ".join(list(discovered_identities)[:5])
+            ),
+        )
+    conflicting_cache_records = [
+        url for url, page in analyses.items() if page.get("conflicting_snapshots")
+    ]
+    if conflicting_cache_records:
+        add_finding(
+            findings,
+            "cache_snapshot_conflict",
+            "high",
+            "withheld",
+            evidence=(
+                f"{len(conflicting_cache_records)} URL(s) have conflicting crawler snapshots with unknown freshness; "
+                "their HTML is excluded from topology coverage until one authoritative snapshot is selected; sample="
+                + ", ".join(conflicting_cache_records[:5])
+            ),
+        )
+    excluded_html_records = sum(
+        1 for page in analyses.values()
+        if page.get("html_present")
+        and not page.get("html_available")
+        and (not page.get("status") or 200 <= int(page.get("status")) < 300)
+    )
+    if excluded_html_records:
+        add_finding(
+            findings,
+            "html_evidence_excluded",
+            "info",
+            "withheld",
+            evidence=(
+                f"{excluded_html_records} cache record(s) contained HTML but were excluded from the coverage gate "
+                "because full-HTML completeness was not explicitly attested, the status was unknown, the final URL "
+                "changed identity or left the audited origin, the response was truncated, or crawler snapshots conflict."
+            ),
+        )
     known_total = len(known)
     identified_sitemap_urls = sum(1 for record in known.values() if record.get("in_sitemap"))
+    resolved_non_graph = {
+        url for url, page in analyses.items()
+        if page.get("same_origin_identity_redirect") or int(page.get("status") or 0) in {404, 410}
+    }
+    graph_eligible_total = max(0, known_total - len(resolved_non_graph))
     html_pages = sum(1 for page in analyses.values() if page.get("html_available"))
-    html_coverage = html_pages / known_total if known_total else 0.0
+    html_coverage = html_pages / graph_eligible_total if graph_eligible_total else 0.0
     homepage = normalize_url(site, site)
     homepage_parsed = bool(analyses.get(homepage, {}).get("html_available"))
-    graph_complete = bool(known_total and html_coverage >= args.complete_threshold and homepage_parsed and not sitemap_data["unresolved"])
+    content_graph_complete = content_gate_passes(
+        graph_eligible_total,
+        html_pages,
+        homepage_parsed,
+        len(sitemap_data["unresolved"]),
+    )
+    graph_complete = bool(content_graph_complete and source_universe["source_universe_complete"])
+
+    if not source_universe["source_universe_complete"]:
+        incomplete_ids = ", ".join(source["id"] for source in source_universe["required_sources_incomplete"]) or "none"
+        gate_reasons = "; ".join(source_universe.get("gate_reasons", [])) or "unspecified"
+        add_finding(
+            findings,
+            "source_universe_incomplete" if source_universe["declared"] else "source_universe_not_declared",
+            "info",
+            "withheld",
+            evidence=(
+                f"universe declared complete={'yes' if source_universe['universe_declared_complete'] else 'no'}; "
+                f"required sources complete={'yes' if source_universe['required_sources_complete'] else 'no'}; "
+                f"incomplete required sources={incomplete_ids}; reasons={gate_reasons}."
+            ),
+        )
 
     if not graph_complete:
         add_finding(
@@ -1061,10 +1677,12 @@ def main(argv=None):
             "info",
             "withheld",
             evidence=(
-                f"HTML coverage={html_coverage:.2%} ({html_pages}/{known_total}); "
+                f"active HTML coverage={html_coverage:.2%} ({html_pages}/{graph_eligible_total}); "
+                f"known URLs={known_total}; resolved redirects/gone={len(resolved_non_graph)}; "
                 f"completeness threshold={args.complete_threshold:.2%}; "
                 f"homepage parsed={'yes' if homepage_parsed else 'no'}; "
-                f"unresolved sitemaps={len(sitemap_data['unresolved'])}. "
+                f"unresolved sitemaps={len(sitemap_data['unresolved'])}; "
+                f"source universe complete={'yes' if source_universe['source_universe_complete'] else 'no'}. "
                 "Whole-site orphan, click-depth, unreachable-from-home, and internal-link-opportunity claims are withheld."
             ),
         )
@@ -1103,6 +1721,40 @@ def main(argv=None):
 
     finding_counts = Counter(item["type"] for item in findings)
     lane_counts = Counter(row["lane"] for row in page_rows)
+    coverage = {
+        "known_urls": known_total,
+        "graph_eligible_urls": graph_eligible_total,
+        "resolved_non_graph_urls": len(resolved_non_graph),
+        "sitemap_urls": identified_sitemap_urls,
+        "page_records": len(analyses),
+        "html_pages": html_pages,
+        "html_coverage": html_coverage,
+        "unresolved_sitemaps": len(sitemap_data["unresolved"]),
+        "homepage_parsed": homepage_parsed,
+        "complete_threshold": args.complete_threshold,
+        "source_manifest_declared": source_universe["declared"],
+        "universe_declared_complete": source_universe["universe_declared_complete"],
+        "required_sources_complete": source_universe["required_sources_complete"],
+        "source_site_matches": source_universe["site_matches"],
+        "source_inventory_binding_complete": source_universe["inventory_binding_complete"],
+        "source_page_cache_binding_complete": source_universe["page_cache_binding_complete"],
+        "source_sitemap_binding_complete": source_universe["sitemap_binding_complete"],
+        "source_input_binding_complete": source_universe["input_binding_complete"],
+        "expected_source_identities": source_universe["expected_normalized_identities"],
+        "observed_source_identities": source_universe["observed_normalized_identities"],
+        "source_identity_count_matches": source_universe["identity_count_matches"],
+        "source_universe_complete": source_universe["source_universe_complete"],
+        "content_graph_complete": content_graph_complete,
+        "graph_complete": graph_complete,
+    }
+    evidence_hashes = {
+        "algorithm": "sha256",
+        "source_manifest": source_universe.get("sha256"),
+        "inventories": [file_sha256(Path(path)) for path in args.inventory],
+        "page_cache": file_sha256(Path(args.page_cache)) if args.page_cache else None,
+        "sitemaps": list(sitemap_data["hashes"]),
+    }
+    release_contract = build_release_contract(source_universe, coverage, evidence_hashes)
     audit = {
         "generated_at": utc_now(),
         "mode": "approved_live_readonly" if args.crawl else ("saved_html_cache" if args.page_cache else "local_coverage"),
@@ -1110,23 +1762,15 @@ def main(argv=None):
         "inputs": {
             "inventories": input_manifest,
             "page_cache": str(Path(args.page_cache).resolve()) if args.page_cache else None,
+            "source_universe": source_universe,
             "sitemaps_resolved": sitemap_data["resolved"],
             "sitemaps_unresolved": sitemap_data["unresolved"],
             "network_enabled": args.allow_network,
             "crawl_enabled": args.crawl,
             "max_pages": args.max_pages,
         },
-        "coverage": {
-            "known_urls": known_total,
-            "sitemap_urls": identified_sitemap_urls,
-            "page_records": len(analyses),
-            "html_pages": html_pages,
-            "html_coverage": html_coverage,
-            "unresolved_sitemaps": len(sitemap_data["unresolved"]),
-            "homepage_parsed": homepage_parsed,
-            "complete_threshold": args.complete_threshold,
-            "graph_complete": graph_complete,
-        },
+        "coverage": coverage,
+        "release_contract": release_contract,
         "lane_counts": dict(lane_counts),
         "schema_type_counts": dict(schema_counts),
         "finding_counts": dict(finding_counts),
@@ -1138,6 +1782,8 @@ def main(argv=None):
 
     with (output_dir / "audit.json").open("w", encoding="utf-8") as handle:
         json.dump(audit, handle, ensure_ascii=False, indent=2)
+    with (output_dir / "decision.json").open("w", encoding="utf-8") as handle:
+        json.dump(release_contract, handle, ensure_ascii=False, indent=2)
     write_csv(output_dir / "pages.csv", page_rows, [
         "url", "path", "title", "h1", "status", "lane", "cluster", "in_sitemap", "html_available",
         "noindex", "canonical", "word_count", "inbound_total", "inbound_content", "outbound_total", "depth",
@@ -1150,8 +1796,11 @@ def main(argv=None):
         "output_dir": str(output_dir.resolve()),
         "mode": audit["mode"],
         "coverage": audit["coverage"],
+        "decision": release_contract["decision"],
         "finding_counts": audit["finding_counts"],
     }, ensure_ascii=True, indent=2))
+    if args.gate_exit_code and not release_contract["release_gate_passed"]:
+        return 2
     return 0
 
 

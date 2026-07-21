@@ -4,69 +4,119 @@
 
 - **Project name:** ProofRank
 - **Track:** Work & Productivity
-- **Tagline:** When evidence is incomplete, ProofRank refuses to guess.
+- **Tagline:** A technical inspection before an old website is redesigned, moved, or cleaned up.
 - **Repository URL:** https://github.com/andreinv-crypto/proofrank
-- **Live interactive demo:** https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html
-- **Public YouTube demo:** `[ADD AFTER VIDEO UPLOAD]`
-- **Codex /feedback Session ID:** `[ADD FROM THE CORE BUILD TASK]`
+- **Complete interactive demo:** https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html
+- **False-green interactive demo:** https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html
+- **Public YouTube demo:** https://youtu.be/x3pWJJJjKM8
+- **Codex `/feedback` Session ID:** Enter directly in the Devpost form; do not publish it in the repository.
 
 ## Project description
 
 ### Inspiration
 
-I’m Andrei Zakharov. For over 13 years, I have built and grown online projects across digital marketing, SEO, and automation. I’m fully paralysed, so every click and correction has a physical cost. Codex helps me turn experience and new ideas into working software with less physical effort and more creative freedom. That same constraint shaped ProofRank: bad automation does not remove work—it creates more review, more risk, and more cleanup. The most dangerous case is an AI turning an incomplete crawl into a confident live-site recommendation.
+I’m Andrei Zakharov, an SEO and digital project specialist with over thirteen years of experience building and growing online projects. I’m fully paralysed. Codex lowers the physical cost of turning hard-won experience and new ideas into working systems, unlocking more of my professional and creative potential.
 
-ProofRank grew from that constraint, but its value is universal: SEO and web operations teams need a fast way to see what the evidence supports, what is only a candidate, and what cannot yet be concluded.
+That experience also makes correction work unusually visible to me. Unsafe automation does not remove work; it creates review, risk, and cleanup. In a website migration, redesign, or large cleanup, the most dangerous failure may happen before a redirect breaks: an incomplete set of URLs can look complete, and a confident recommendation can erase a page that still carries traffic, links, or business history.
+
+ProofRank turns that problem into an enforceable product rule: **no site-wide conclusions until both the source universe and the active HTML evidence are proven.**
 
 ### What it does
 
-ProofRank is a read-only Codex plugin for SEO and web operations teams. It converts saved URL inventories, sitemaps, and HTML caches into a reproducible site graph audit. It detects coverage gaps, click depth, orphan and unreachable-page candidates, broken/noindex/noncanonical targets, schema problems, duplicate content, cautious topic conflicts, and contextual internal-link opportunities.
+For a site owner, ProofRank is a technical inspection before renovating an old website. It helps the owner ask an SEO specialist, agency, or developer to prove that valuable pages have not disappeared from the plan.
 
-Every finding carries an evidence status: confirmed, candidate, or withheld. Graph-level conclusions are withheld until coverage clears an explicit completeness gate. A dependency-free interactive dashboard lets a reviewer filter the evidence, inspect individual findings, and understand the decision boundary before anyone changes a live site.
+For a technical team, ProofRank is a local, read-only Codex plugin that:
 
-The bundled comparison makes the behaviour visible: the same 11-URL synthetic fixture produces a 63.64% incomplete result that withholds whole-site graph claims, then a 100% result that enables supported findings.
+- imports already-exported GSC, GA4, WordPress, crawler, generic inventory, sitemap, and saved-HTML evidence;
+- normalizes URL identities without discarding source provenance;
+- verifies that the declared source universe matches the exact inventory, cache, and sitemap bodies by SHA-256;
+- verifies full HTML for every active graph-eligible identity;
+- reports broken, noindex, noncanonical, schema, duplicate, reachability, overlap, and link-opportunity evidence conservatively;
+- emits a machine-readable `decision.json` contract with `WITHHOLD` or `READY_FOR_HUMAN_REVIEW`.
+
+The public comparison demonstrates the false-green that motivated the product:
+
+- **Incomplete case:** only 7 of 11 expected source identities are present, so the source gate fails and four identities remain unclassified. Yet all seven observed active pages have usable HTML (`7/7`, 100%), so the HTML gate passes. The final result is still `WITHHOLD`.
+- **Complete case:** all 11 expected identities are present. One confirmed 404 is classified outside the active denominator, all 10 active pages have usable HTML (`10/10`, 100%), and the result becomes `READY_FOR_HUMAN_REVIEW`.
+
+This is the product’s central value: **100% of what was observed is not proof that everything important was observed.**
+
+`READY_FOR_HUMAN_REVIEW` never means “deploy.” The contract always contains `live_change_authorized=false`. With the optional `--gate-exit-code`, a separate workflow receives exit code `2` for `WITHHOLD` and `0` for ready-for-review; normal input or runtime failures remain ordinary errors.
 
 ### How we built it
 
-ProofRank has three layers:
+ProofRank has four cooperating layers:
 
-1. a deterministic, standard-library Python engine for parsing, normalization, graph analysis, and portable JSON/CSV/Markdown artifacts;
-2. a Codex Skill that defines the safe local workflow and evidence boundary for Codex to follow and explain, without authorizing live changes;
-3. a single-file static dashboard that contains sanitized audit results and requires no server, account, analytics, or external JavaScript.
+1. deterministic, standard-library Python tools for offline export validation, URL normalization, provenance, source bindings, HTML parsing, graph analysis, and portable JSON/CSV/Markdown output;
+2. a Codex Skill that makes the safe workflow and decision boundaries reusable;
+3. a Guarded Release Contract in `decision.json`, with stage results, blocker codes, unclassified counts, evidence hashes, and a deterministic optional CLI signal;
+4. a dependency-free dashboard that starts with an owner/release explanation and then exposes the technical evidence ledger.
 
-The public demo uses fully synthetic data. The design came from an earlier private, domain-specific workflow built with previous Codex models. That workflow processed 3,137 active pages returning HTTP 200 with 99.87% HTML coverage and informed ProofRank’s design. It is not part of this submission. No private URLs, content, credentials, analytics exports, backups, or local paths are included.
+No API key or third-party Python package is required for the demo. The public adapters read files the user has already exported; they do not perform OAuth, call live Google or CMS APIs, control a crawler, or write to production.
 
 ### How Codex and GPT-5.6 were used
 
-During the Build Week submission period, Codex with GPT-5.6 helped turn those earlier lessons into a portable product: mapping the reusable architecture, refactoring the engine, authoring the Codex Skill and plugin manifests, generating a synthetic edge-case fixture, building the dashboard, writing tests, running official plugin/skill validators, scanning for secrets, and executing desktop/mobile browser QA.
+ProofRank grew from lessons in an earlier private workflow built with previous Codex models. During Build Week, Codex with GPT-5.6 helped turn those lessons into a portable public product. Andrei used GPT-5.6 at the Ultra reasoning level to challenge the first design against sanitized migration evidence.
 
-For the final Build Week extension, Andrei used GPT-5.6 at the Ultra reasoning level while implementing and testing the reproducible incomplete-coverage scenario. Deterministic Python derives a 7-of-11 cache from the same public fixture, emits an explicit `graph_claims_withheld` evidence item, and verifies that orphan, unreachable, and internal-link-opportunity claims are not promoted when the gate fails.
+That review exposed the false-completeness flaw: a perfect `7/7` observed-HTML result could hide four missing source identities. Codex then helped implement and test:
 
-The model does not manufacture graph facts. Deterministic Python calculates coverage and findings; Codex with GPT-5.6 follows the Skill’s safe local workflow, explains the result, and helps run validation.
+- separate source-universe and active-HTML gates;
+- `expected_normalized_identities` and an explicit unclassified count;
+- terminal-URL handling, including the confirmed 404 outside the active denominator;
+- offline GSC, GA4, WordPress, crawler, sitemap, and inventory adapters;
+- `decision.json`, stable blocker codes, evidence hashes, and `--gate-exit-code`;
+- the false-green comparison, owner/release dashboard, plugin documentation, regression tests, CI, secret scanning, and visual QA.
+
+Deterministic Python calculates the facts. Codex follows the Skill, explains what the evidence supports, and never manufactures permission for a live change.
+
+### Evidence beyond the synthetic fixture
+
+The public fixture contains 11 synthetic identities so anyone can reproduce the behavior without exposing clients or credentials. Sanitized aggregate evidence from two separate private projects shows why the gate matters at real operational scale:
+
+Both projects began as long-lived WordPress estates with content history dating to 2013 and legacy PHP 5.6 / MySQL 5.7 stacks. Their separate platform modernization establishes the old-site-rescue use case; it is not presented as a capability of public ProofRank.
+
+- **TorreviejaTour:** 3,598 migration paths were checked; zero of 3,090 previously successful paths became non-200. A separate active-site graph contained 3,141 known URLs and 3,137 usable HTML pages (`99.872652%`), which still does not satisfy ProofRank’s strict 100% topology gate.
+- **Velas Purpuras / Alye Parusa:** a seven-language migration initially had an apparently complete `1,807/1,807` gate. Full reconciliation expanded the source union to 11,172 normalized identities. Even with usable HTML for all `5,376/5,376` active canonical pages, source readiness remained yellow and the crawl frontier remained open, so whole-site graph claims were withheld.
+
+In a **separate private deployment workflow**, not in public ProofRank, output validation later caught a static-cache-path defect: only `19/442` language pages were green and 1,522 invalid alternate emissions remained. That workflow automatically restored all three touched files. After the fix it passed `442/442` pages with zero invalid emissions. This incident shaped ProofRank’s read-only release contract, but ProofRank did not apply or roll back those live changes.
+
+The public repository contains only synthetic fixtures and sanitized aggregates. It excludes raw URLs, credentials, analytics exports, backups, private connectors, and production write logic. The private artifacts are identified by hashes in `validation/real_world_evidence.json`; the aggregates are not claimed to be independently reproducible public benchmarks.
+
+No controlled time benchmark exists yet. With exports and crawl data already available, the current planning model estimates about 5–10 hours of mechanical reconciliation and evidence packaging saved on a 2,000–5,000-identity project. Access collection, live crawling, expert URL decisions, implementation, and monitoring are excluded; the number is a hypothesis to validate, not a guaranteed result.
 
 ### Challenges
 
-- Generalizing a real workflow without leaking private operational data.
-- Preventing partial input coverage from producing unsafe graph-level claims.
-- Making a judgeable developer tool that works without rebuilding, credentials, or paid APIs.
-- Keeping the interface useful on both desktop and mobile while remaining a portable static file.
+- Distinguishing “every observed page has HTML” from “the full URL universe is known.”
+- Generalizing private operational lessons without leaking private data.
+- Classifying terminal URLs without hiding unresolved errors from the active denominator.
+- Giving owners a plain-language stop/proceed explanation while preserving a rigorous technical evidence ledger.
+- Making an installable, testable developer tool that judges can run without credentials or rebuilding.
 
 ### Accomplishments
 
-- A working installable Codex plugin with a valid manifest and valid Skill.
-- A deterministic demo that produces 20 evidence items across 11 synthetic pages.
-- Explicit confirmed/candidate/withheld evidence states and a 95% graph-completeness gate.
-- A one-command before/after proof: 63.64% coverage with graph claims withheld, then 100% coverage with the gate enabled.
-- A dependency-free interactive dashboard with filters and evidence details.
-- Automated unit, demo, boundary, secret-scan, and browser-interaction checks.
+- A working Codex plugin and reusable Skill.
+- A one-command false-green comparison: source `7/11` fails while active HTML `7/7` passes, producing `WITHHOLD`; source `11/11` plus active HTML `10/10` and one confirmed 404 produces `READY_FOR_HUMAN_REVIEW`.
+- A machine-readable Guarded Release Contract and deterministic optional exit codes `2/0`.
+- Offline adapters that preserve provenance and bind exact inputs by SHA-256.
+- Conservative evidence states: `confirmed`, `candidate`, and `withheld`.
+- A self-contained owner/technical dashboard, reproducible fixtures, automated tests, multi-version CI, and secret checks.
 
 ### What we learned
 
-Agents become more trustworthy when uncertainty is part of the output contract. Separating deterministic measurements from model-guided interpretation makes the workflow easier to test, safer to operate, and more useful to experts.
+Agents become more useful when uncertainty is part of the output contract. The right denominator is a product feature: 100% HTML coverage can be a false green if the source universe is incomplete. A safe workflow must prove the universe first, prove active content second, and keep human authorization outside both gates.
 
-### What's next
+### What’s next
 
-Next steps are read-only adapters for crawler exports and Search Console, comparison reports between audit snapshots, configurable evidence policies for larger teams, and an optional hosted viewer that preserves the same no-write safety boundary. The same evidence-gate pattern can also protect other AI workflows that act on incomplete data.
+Next steps are additional export dialects, snapshot comparison, team policy profiles, and portable evidence packs. A controlled benchmark will compare analyst time on repeated audits; until then, time savings remain a planning model rather than a measured claim. Any future authenticated connector or production action would be a separately secured capability, not an implied feature of today’s offline, read-only plugin.
+
+### Why it matters
+
+- **Technical implementation:** deterministic tools, exact input bindings, two independent gates, a versioned decision contract, regression tests, and reproducible local artifacts.
+- **Design:** an owner-first release explanation leads into the complete technical evidence ledger.
+- **Potential impact:** fewer valuable pages lost and fewer correction cycles before a human approves migration or cleanup work.
+- **Quality of idea:** ProofRank can refuse an unsupported site-wide claim even when the observed subset looks perfect.
+
+Human review is deliberate. Cannibalization, merge, redirect, canonical, `noindex`, and content choices depend on intent, backlinks, business role, and history. ProofRank supplies auditable evidence; it does not make or authorize the live change.
 
 ## Technologies
 
@@ -74,24 +124,31 @@ Codex, GPT-5.6, Codex Skills, Codex plugins, Python, HTML, CSS, JavaScript, JSON
 
 ## Testing instructions
 
-The repository contains two pre-generated interactive demos. Open the [incomplete-coverage demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html) first, then the [complete demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html). No rebuilding, login, API key, or network request is required.
+The fastest path requires no rebuild, login, API key, or network request:
 
-To regenerate the same result with Python 3.10+:
+1. Open the [false-green demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-incomplete-demo.html). Confirm source `7/11` fails, active HTML `7/7` passes, four identities are unclassified, and the decision is `WITHHOLD`.
+2. Open the [complete demo](https://andreinv-crypto.github.io/proofrank/showcase/proofrank-demo.html). Confirm source `11/11`, one confirmed 404, active HTML `10/10`, and `READY_FOR_HUMAN_REVIEW`.
+3. In both cases confirm `live_change_authorized=false`.
 
-```bash
-python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py
-```
-
-To regenerate both evidence-gate states:
+To regenerate both states with Python 3.10+:
 
 ```bash
 python plugins/proofrank/skills/audit-site-graph/scripts/run_demo.py --scenario both
 ```
 
-To run the portable verification suite:
+Open:
+
+```text
+plugins/proofrank/demo-output/incomplete/dashboard.html
+plugins/proofrank/demo-output/complete/dashboard.html
+```
+
+Inspect the matching `decision.json` file in each directory. To make the result usable as a deterministic external read-only gate, rerun `site_graph_audit.py` with `--gate-exit-code`: the incomplete case returns `2`; the complete case returns `0`.
+
+To run the full portable verification suite:
 
 ```bash
 python scripts/verify.py
 ```
 
-Expected complete-demo headline values: 11 known URLs, 100% HTML coverage, 20 evidence items, and graph claims enabled. Expected incomplete-demo values: 11 known URLs, 7 parsed pages, 63.64% HTML coverage, and graph claims withheld.
+See [INTEGRATIONS.md](INTEGRATIONS.md) for accepted offline exports and [JUDGES.md](JUDGES.md) for the shortest evaluation path.

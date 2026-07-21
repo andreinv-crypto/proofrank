@@ -24,6 +24,19 @@ async function captureSlide(browser, storyboard, scene, destination) {
   }
 }
 
+async function outline(locator, color) {
+  if (await locator.count() !== 1) fail("Expected exactly one element to highlight");
+  await locator.evaluate((element, outlineColor) => {
+    element.style.outline = `4px solid ${outlineColor}`;
+    element.style.outlineOffset = "-4px";
+    element.style.transition = "outline-color 180ms ease";
+  }, color);
+}
+
+async function clearOutline(locator) {
+  await locator.evaluate(element => { element.style.outline = "none"; });
+}
+
 async function recordDashboard(browser, dashboard, destination, scenario) {
   const videoDir = path.join(path.dirname(destination), `.record-${scenario}`);
   fs.mkdirSync(videoDir, { recursive: true });
@@ -40,43 +53,50 @@ async function recordDashboard(browser, dashboard, destination, scenario) {
 
   try {
     await page.goto(pathToFileURL(dashboard).href, { waitUntil: "load" });
+    await page.waitForSelector("#releaseDecision");
     await page.waitForSelector("#metrics .card");
-    await page.waitForTimeout(3200);
+    const sourceMetric = page.locator("#metrics .card").filter({ hasText: "Source identities" });
+    const htmlMetric = page.locator("#metrics .card").filter({ hasText: "Active HTML" });
+    const releaseCard = page.locator("#boundaryCard");
+    const decision = (await page.locator("#releaseDecision").innerText()).trim();
+    const sourceText = (await sourceMetric.innerText()).replace(/\s+/g, " ");
+    const htmlText = (await htmlMetric.innerText()).replace(/\s+/g, " ");
+    await page.waitForTimeout(1800);
 
     if (scenario === "incomplete") {
-      const metric = page.locator("#metrics .card").filter({ hasText: "Graph claims" });
-      await metric.evaluate(el => { el.style.outline = "4px solid #ffc76a"; el.style.outlineOffset = "-4px"; });
-      await page.waitForTimeout(3600);
-      await page.locator('[data-tab="findings"]').click();
-      await page.waitForTimeout(1300);
-      await page.locator("#status").selectOption("withheld");
-      await page.waitForTimeout(3200);
-      const gateRow = page.locator("#findingRows tr").filter({ hasText: "graph claims withheld" }).first();
-      if (await gateRow.count() !== 1) fail("Incomplete demo did not expose graph_claims_withheld");
-      await gateRow.click();
-      await page.waitForTimeout(6200);
-      await page.locator("#closeDrawer").click();
-      await page.locator('[data-tab="overview"]').click();
-      await page.waitForTimeout(2600);
+      if (!decision.includes("WITHHOLD")) fail(`Incomplete demo decision changed: ${decision}`);
+      if (!sourceText.includes("7/11")) fail(`Incomplete source metric changed: ${sourceText}`);
+      if (!htmlText.includes("7/7")) fail(`Incomplete HTML metric changed: ${htmlText}`);
+      await outline(htmlMetric, "#73e2a7");
+      await page.waitForTimeout(4200);
+      await clearOutline(htmlMetric);
+      await outline(sourceMetric, "#ffc76a");
+      await page.waitForTimeout(4200);
+      await clearOutline(sourceMetric);
+      await outline(releaseCard, "#ffc76a");
+      await page.waitForTimeout(7200);
     } else if (scenario === "complete") {
-      await page.waitForTimeout(1900);
-      await page.locator('[data-tab="findings"]').click();
-      await page.waitForTimeout(1200);
-      await page.locator("#severity").selectOption("high");
-      await page.waitForTimeout(2600);
-      const broken = page.locator("#findingRows tr").filter({ hasText: "broken internal link" }).first();
-      if (await broken.count() !== 1) fail("Complete demo did not expose the broken-link finding");
-      await broken.click();
-      await page.waitForTimeout(5700);
-      await page.locator("#closeDrawer").click();
-      await page.locator('[data-tab="overview"]').click();
-      await page.waitForTimeout(2300);
+      if (!decision.includes("READY FOR HUMAN REVIEW")) fail(`Complete demo decision changed: ${decision}`);
+      if (!sourceText.includes("11/11")) fail(`Complete source metric changed: ${sourceText}`);
+      if (!htmlText.includes("10/10")) fail(`Complete HTML metric changed: ${htmlText}`);
+      await outline(sourceMetric, "#73e2a7");
+      await page.waitForTimeout(4000);
+      await clearOutline(sourceMetric);
+      await outline(htmlMetric, "#73e2a7");
+      await page.waitForTimeout(4000);
+      await clearOutline(htmlMetric);
+      await outline(releaseCard, "#73e2a7");
+      await page.waitForTimeout(6400);
     } else if (scenario === "safety") {
       await page.locator('[data-tab="method"]').click();
-      await page.waitForTimeout(2200);
-      const safety = page.locator(".method-grid .card").filter({ hasText: "No silent production writes" });
-      await safety.evaluate(el => { el.style.outline = "4px solid #56d9d2"; el.style.outlineOffset = "-4px"; });
+      await page.waitForTimeout(1800);
+      const handoff = page.locator(".method-grid .card").filter({ hasText: "Stop or hand off deterministically" });
+      await outline(handoff, "#56d9d2");
       await page.waitForTimeout(7200);
+      await clearOutline(handoff);
+      const safety = page.locator(".method-grid .card").filter({ hasText: "No silent production writes" });
+      await outline(safety, "#ffc76a");
+      await page.waitForTimeout(5200);
     }
 
     if (errors.length) fail(errors.join("\n"));
@@ -112,7 +132,7 @@ async function main() {
   ].filter(Boolean);
   const executablePath = candidates.find(candidate => fs.existsSync(candidate));
   const browser = await chromium.launch({ headless: true, executablePath });
-  const slides = ["founder", "disclosure", "risk", "promise", "codex", "architecture", "scale", "outro"];
+  const slides = ["hook", "founder", "codex", "proof", "rollback", "torrevieja", "impact", "architecture", "outro"];
 
   try {
     for (const scene of slides) {

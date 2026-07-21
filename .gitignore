@@ -8,6 +8,7 @@ credentials*.json
 secrets*.json
 
 # Generated and local runtime state
+.build/
 __pycache__/
 *.py[cod]
 .pytest_cache/

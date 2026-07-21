@@ -1,7 +1,7 @@
 {
   "name": "proofrank",
-  "version": "0.2.0",
-  "description": "Evidence-first site graph audits that withhold unsupported conclusions.",
+  "version": "0.4.0",
+  "description": "A read-only pre-migration evidence gate for long-lived websites.",
   "author": {
     "name": "Andrei Zakharov"
   },
@@ -10,13 +10,13 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "ProofRank",
-    "shortDescription": "Evidence before action. No guessing from partial crawls.",
-    "longDescription": "Audit multilingual site graphs from saved inventories, sitemaps, and HTML caches. ProofRank separates confirmed evidence, cautious candidates, and withheld conclusions—and stops whole-site claims when coverage is incomplete.",
+    "shortDescription": "Protect old pages before a redesign or migration.",
+    "longDescription": "Reconcile saved SEO, CMS, crawler, sitemap, and HTML evidence before a long-lived website is redesigned or moved. ProofRank keeps source-universe and active-HTML gates separate, labels confirmed/candidate/withheld evidence, and emits a read-only WITHHOLD or READY_FOR_HUMAN_REVIEW contract for people and automation.",
     "developerName": "Andrei Zakharov",
     "category": "Productivity",
-    "capabilities": ["Read-only audit", "Local reports", "Interactive dashboard"],
+    "capabilities": ["Offline export normalization", "Source provenance", "Two-stage evidence gate", "Guarded release contract", "Read-only audit", "Owner and technical views", "Local reports"],
     "defaultPrompt": [
-      "Audit this site's saved graph without changing anything.",
+      "Check whether this old site is ready for a safe redesign or migration without changing anything.",
       "Find orphan and internal-link candidates from this cache.",
       "Explain what is confirmed, candidate, or withheld by the current coverage."
     ],
